@@ -1,2 +1,9 @@
 [tool.black]
 extend-exclude = "/env/|/venv/|/migrations/"
+
+[tool.isort]
+profile = "black"
+line_length = 88
+known_django = 'django'
+skip_glob = '**/migrations/*.py,venv/*,env/*'
+sections = 'FUTURE,STDLIB,DJANGO,THIRDPARTY,FIRSTPARTY,LOCALFOLDER'
