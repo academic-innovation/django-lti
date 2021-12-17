@@ -1,0 +1,22 @@
+image: python:latest
+
+stages:
+  - test
+  - build
+
+quality:
+  stage: test
+  image: thekevjames/nox
+  script:
+    - nox
+
+build:
+  stage: build
+  script:
+    - pip install build
+    - python -m build
+  artifacts:
+    untracked: false
+    expire_in: 1 week
+    paths:
+      - dist/
