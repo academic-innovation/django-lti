@@ -1,4 +1,6 @@
 import json
+from typing import Optional, Tuple
+from urllib import parse
 from uuid import uuid4
 
 from django.db import models
@@ -6,6 +8,7 @@ from django.utils.timezone import now
 from django.utils.translation import gettext_lazy as _
 
 from jwcrypto.jwk import JWK
+from pylti1p3.contrib.django.message_launch import DjangoMessageLaunch
 
 
 class KeyQuerySet(models.QuerySet):
@@ -139,6 +142,11 @@ class LtiRegistration(models.Model):
     def __str__(self):
         return self.name
 
+    @property
+    def has_key(self):
+        """bool: Indicates if the registration has an assigned keypair."""
+        return self.public_key and self.private_key
+
 
 class LtiDeploymentQuerySet(models.QuerySet):
     """Custom QuerySet for LtiDeployment objects."""
@@ -188,3 +196,149 @@ class LtiDeployment(models.Model):
 
     def __str__(self):
         return f"{self.registration}: {self.deployment_id}"
+
+
+class LtiLaunch:
+    """A LTI launch."""
+
+    _lti1p3_message_launch: Optional[DjangoMessageLaunch] = None
+    _lti1p3_launch_id: Optional[str] = None
+
+    def __init__(self, message_launch: DjangoMessageLaunch) -> None:
+        launch_id = None
+        if message_launch is not None:
+            launch_id = message_launch.get_launch_id()
+        self._lti1p3_launch_id = launch_id
+        self._lti1p3_message_launch = message_launch
+
+    def get_launch_id(self):
+        return self._lti1p3_launch_id
+
+    def get_message_launch(self):
+        return self._lti1p3_message_launch
+
+    def get_launch_data(self):
+        message_launch = self.get_message_launch()
+        if message_launch is None:
+            return None
+        return message_launch.get_launch_data()
+
+    def get_claim(self, claim):
+        launch_data = self.get_launch_data()
+        if launch_data is None:
+            return None
+        return launch_data.get(claim)
+
+    @property
+    def is_present(self) -> bool:
+        return True
+
+    @property
+    def is_absent(self) -> bool:
+        return False
+
+    @property
+    def is_resource_launch(self) -> bool:
+        """Indicates if the launch is resource link launch request."""
+        message_launch = self.get_message_launch()
+        if message_launch is None:
+            return False
+        return message_launch.is_resource_launch()
+
+    @property
+    def is_deep_link_launch(self) -> bool:
+        """Indicates if the launch is a deep linking request."""
+        message_launch = self.get_message_launch()
+        if message_launch is None:
+            return False
+        return message_launch.is_deep_link_launch()
+
+    @property
+    def is_submission_review_launch(self) -> bool:
+        """Indicates if the launch is a submission review request."""
+        message_launch = self.get_message_launch()
+        if message_launch is None:
+            return False
+        return message_launch.is_submission_review_launch()
+
+    @property
+    def is_data_privacy_launch(self) -> bool:
+        """Indicates if the launch is a data privacy launch request."""
+        message_launch = self.get_message_launch()
+        if message_launch is None:
+            return False
+        return message_launch.is_data_privacy_launch()
+
+    @property
+    def launch_presentation_claim(self):
+        return self.get_claim(
+            "https://purl.imsglobal.org/spec/lti/claim/launch_presentation"
+        )
+
+    @property
+    def document_target(self) -> Optional[str]:
+        """The kind of browser window or frame in which the launch is presented.
+
+        See https://www.imsglobal.org/spec/lti/v1p3/#launch-presentation-claim"""
+        if self.launch_presentation_claim is None:
+            return None
+        return self.launch_presentation_claim.get("document_target")
+
+    @property
+    def dimensions(self) -> Optional[Tuple[int, int]]:
+        """Width and height of the window or frame in which the launch is presented.
+
+        See https://www.imsglobal.org/spec/lti/v1p3/#launch-presentation-claim"""
+        if self.launch_presentation_claim is None:
+            return None
+        dimensions = (
+            self.launch_presentation_claim.get("width"),
+            self.launch_presentation_claim.get("height"),
+        )
+        return dimensions if None not in dimensions else None
+
+    def get_return_url(
+        self,
+        *,
+        lti_errormsg: str = "",
+        lti_msg: str = "",
+        lti_errorlog: str = "",
+        lti_log: str = "",
+    ) -> Optional[str]:
+        """Constructs a return URL, when supported by the launch."""
+        if self.launch_presentation_claim is None:
+            return None
+        return_url = self.launch_presentation_claim.get("return_url")
+        if return_url is None:
+            return None
+        url_parts = parse.urlsplit(return_url)
+        query = dict(
+            parse.parse_qsl(url_parts.query)
+            + [
+                ("lti_errormsg", lti_errormsg),
+                ("lti_msg", lti_msg),
+                ("lti_errorlog", lti_errorlog),
+                ("lti_log", lti_log),
+            ]
+        )
+        return parse.urlunsplit(
+            (
+                url_parts.scheme,
+                url_parts.netloc,
+                url_parts.path,
+                parse.urlencode([param for param in query.items() if param[1]]),
+                url_parts.fragment,
+            )
+        )
+
+
+class AbsentLtiLaunch:
+    """Placeholder for non-LTI launch contexts."""
+
+    @property
+    def is_present(self) -> bool:
+        return False
+
+    @property
+    def is_absent(self) -> bool:
+        return True
