@@ -3,6 +3,7 @@ image: python:latest
 stages:
   - test
   - build
+  - deploy
 
 quality:
   stage: test
@@ -20,3 +21,11 @@ build:
     expire_in: 1 week
     paths:
       - dist/
+
+publish:
+  stage: deploy
+  script:
+    - pip install twine
+    - TWINE_PASSWORD=${CI_JOB_TOKEN} TWINE_USERNAME=gitlab-ci-token python -m twine upload --repository-url ${CI_API_V4_URL}/projects/${CI_PROJECT_ID}/packages/pypi dist/*
+  rules:
+    - if: $CI_COMMIT_TAG
