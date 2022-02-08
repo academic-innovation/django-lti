@@ -17,6 +17,7 @@ from lti_tool.utils import DjangoToolConfig, get_launch_from_request
 
 from .constants import SESSION_KEY
 from .models import Key, LtiLaunch
+from .utils import sync_data_from_launch
 
 
 def jwks(request):
@@ -64,6 +65,7 @@ class LtiLaunchBaseView(View):
     def post(self, request: HttpRequest, *args, **kwargs):
         request.session.clear()
         lti_launch = get_launch_from_request(request)
+        sync_data_from_launch(lti_launch)
         request.session[SESSION_KEY] = lti_launch.get_launch_id()
         request.lti_launch = lti_launch
         if request.lti_launch.is_resource_launch:

@@ -8,7 +8,17 @@ from pylti1p3.deployment import Deployment
 from pylti1p3.registration import Registration
 from pylti1p3.tool_config.abstract import ToolConfAbstract
 
-from .models import Key, LtiDeployment, LtiLaunch, LtiRegistration
+from .models import (
+    Key,
+    LtiContext,
+    LtiDeployment,
+    LtiLaunch,
+    LtiMembership,
+    LtiPlatformInstance,
+    LtiRegistration,
+    LtiResourceLink,
+    LtiUser,
+)
 
 
 def _prepare_registraion(lti_registration):
@@ -123,3 +133,125 @@ def get_launch_from_request(
         )
         message_launch.validate()
     return LtiLaunch(message_launch)
+
+
+def sync_user_from_launch(lti_launch: LtiLaunch) -> LtiUser:
+    sub = lti_launch.get_claim("sub")
+    user_claims = {
+        "given_name": lti_launch.get_claim("given_name"),
+        "family_name": lti_launch.get_claim("family_name"),
+        "name": lti_launch.get_claim("name"),
+        "email": lti_launch.get_claim("email"),
+        "picture_url": lti_launch.get_claim("picture"),
+    }
+    lti_user, _created = LtiUser.objects.update_or_create(
+        registration=lti_launch.registration,
+        sub=sub,
+        defaults={k: v for k, v in user_claims.items() if v is not None},
+    )
+    return lti_user
+
+
+def sync_context_from_launch(lti_launch: LtiLaunch) -> LtiContext:
+    context_claim = lti_launch.context_claim
+    context_types = [] if context_claim is None else context_claim.get("type", [])
+    if context_claim is None:
+        context, _created = LtiContext.objects.get_or_create(
+            deployment=lti_launch.deployment, id_on_platform=""
+        )
+    else:
+        defaults = {
+            "title": context_claim.get("title", ""),
+            "label": context_claim.get("label", ""),
+            "is_course_template": (
+                "http://purl.imsglobal.org/vocab/lis/v2/course#CourseTemplate"
+                in context_types
+            ),
+            "is_course_offering": (
+                "http://purl.imsglobal.org/vocab/lis/v2/course#CourseOffering"
+                in context_types
+            ),
+            "is_course_section": (
+                "http://purl.imsglobal.org/vocab/lis/v2/course#CourseSection"
+                in context_types
+            ),
+            "is_group": (
+                "http://purl.imsglobal.org/vocab/lis/v2/course#Group" in context_types
+            ),
+        }
+        context, _created = LtiContext.objects.update_or_create(
+            deployment=lti_launch.deployment,
+            id_on_platform=context_claim["id"],
+            defaults=defaults,
+        )
+    return context
+
+
+def sync_membership_from_launch(
+    lti_launch: LtiLaunch, user: LtiUser, context: LtiContext
+) -> LtiMembership:
+    roles = lti_launch.roles_claim
+    defaults = {}
+    if "http://purl.imsglobal.org/vocab/lis/v2/membership#Administrator" in roles:
+        defaults["is_administrator"] = True
+    if "http://purl.imsglobal.org/vocab/lis/v2/membership#ContentDeveloper" in roles:
+        defaults["is_content_developer"] = True
+    if "http://purl.imsglobal.org/vocab/lis/v2/membership#Instructor" in roles:
+        defaults["is_instructor"] = True
+    if "http://purl.imsglobal.org/vocab/lis/v2/membership#Learner" in roles:
+        defaults["is_learner"] = True
+    if "http://purl.imsglobal.org/vocab/lis/v2/membership#Mentor" in roles:
+        defaults["is_mentor"] = True
+    membership, _created = LtiMembership.objects.update_or_create(
+        user=user, context=context, defaults=defaults
+    )
+    return membership
+
+
+def sync_resource_link_from_launch(
+    lti_launch: LtiLaunch, context: LtiContext
+) -> LtiResourceLink:
+    resource_link_claim = lti_launch.resource_link_claim
+    resource_link, _created = LtiResourceLink.objects.update_or_create(
+        context=context,
+        id_on_platform=resource_link_claim["id"],
+        defaults={
+            "title": resource_link_claim.get("title", ""),
+            "description": resource_link_claim.get("description", ""),
+        },
+    )
+    return resource_link
+
+
+def sync_platform_instance_from_launch(
+    lti_launch: LtiLaunch,
+) -> Optional[LtiPlatformInstance]:
+    platform_instance_claim = lti_launch.platform_instance_claim
+    if platform_instance_claim is None:
+        return None
+    platform_instance, _created = LtiPlatformInstance.objects.update_or_create(
+        issuer=lti_launch.get_claim("iss"),
+        guid=platform_instance_claim["guid"],
+        defaults={
+            "contact_email": platform_instance_claim.get("contact_email", ""),
+            "description": platform_instance_claim.get("description", ""),
+            "name": platform_instance_claim.get("name", ""),
+            "url": platform_instance_claim.get("url", ""),
+            "product_family_code": platform_instance_claim.get(
+                "product_family_code", ""
+            ),
+            "version": platform_instance_claim.get("version", ""),
+        },
+    )
+    deployment = lti_launch.deployment
+    deployment.platform_instance = platform_instance
+    deployment.save(update_fields=["platform_instance"])
+    return platform_instance
+
+
+def sync_data_from_launch(lti_launch: LtiLaunch) -> None:
+    user = sync_user_from_launch(lti_launch)
+    context = sync_context_from_launch(lti_launch)
+    sync_membership_from_launch(lti_launch, user, context)
+    sync_resource_link_from_launch(lti_launch, context)
+    sync_platform_instance_from_launch(lti_launch)
