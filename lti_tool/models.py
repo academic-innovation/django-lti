@@ -3,7 +3,9 @@ from typing import Optional, Tuple
 from urllib import parse
 from uuid import uuid4
 
+from django.conf import settings
 from django.db import models
+from django.utils.functional import cached_property
 from django.utils.timezone import now
 from django.utils.translation import gettext_lazy as _
 
@@ -148,6 +150,37 @@ class LtiRegistration(models.Model):
         return self.public_key and self.private_key
 
 
+class LtiPlatformInstance(models.Model):
+    """An instance of a LTI learning platform.
+
+    The platform instance claim is described in the LTI spec at
+    https://www.imsglobal.org/spec/lti/v1p3/#platform-instance-claim
+    """
+
+    issuer = models.CharField(_("issuer"), max_length=255)
+    guid = models.CharField(_("GUID"), max_length=255)
+    contact_email = models.EmailField(_("contact email"), blank=True)
+    description = models.TextField(_("description"), blank=True)
+    name = models.CharField(_("name"), max_length=500, blank=True)
+    url = models.URLField(_("URL"), blank=True)
+    product_family_code = models.CharField(
+        _("product family code"), max_length=500, blank=True
+    )
+    version = models.CharField(_("version"), max_length=500, blank=True)
+
+    class Meta:
+        verbose_name = _("LTI platform instance")
+        verbose_name_plural = _("LTI platform instances")
+        constraints = [
+            models.UniqueConstraint(
+                fields=["issuer", "guid"], name="unique_guid_per_issuer"
+            )
+        ]
+
+    def __str__(self) -> str:
+        return self.name if self.name else self.guid
+
+
 class LtiDeploymentQuerySet(models.QuerySet):
     """Custom QuerySet for LtiDeployment objects."""
 
@@ -167,6 +200,8 @@ class LtiDeployment(models.Model):
             this deployment.
         deployment_id (str): The deployment ID as provided by the platform.
         is_active (bool): Indicates if the deployment has been activated in the tool.
+        platform_instance (LtiPlatformInstance): The platform instance associated with
+            this deployment.
         datetime_created (datetime): When the deployment was created.
         datetime_modified (datetime): When the deployment was last modified.
     """
@@ -179,6 +214,14 @@ class LtiDeployment(models.Model):
     )
     deployment_id = models.CharField(_("deployment ID"), max_length=255)
     is_active = models.BooleanField(_("is active"), default=False)
+    platform_instance = models.ForeignKey(
+        LtiPlatformInstance,
+        related_name="deployments",
+        on_delete=models.SET_NULL,
+        verbose_name=_("platform instance"),
+        null=True,
+        blank=True,
+    )
     datetime_created = models.DateTimeField(_("created"), default=now, editable=False)
     datetime_modified = models.DateTimeField(_("modified"), auto_now=True)
 
@@ -196,6 +239,165 @@ class LtiDeployment(models.Model):
 
     def __str__(self):
         return f"{self.registration}: {self.deployment_id}"
+
+
+class LtiUser(models.Model):
+    """A platform user as described by an LTI launch.
+
+    The user identity claims are described in the LTI spec at
+    https://www.imsglobal.org/spec/lti/v1p3/#user-identity-claims
+    """
+
+    registration = models.ForeignKey(
+        LtiRegistration,
+        related_name="users",
+        on_delete=models.CASCADE,
+        verbose_name=_("registration"),
+    )
+    sub = models.CharField(_("subject"), max_length=255)
+    given_name = models.CharField(_("given name"), max_length=500, blank=True)
+    family_name = models.CharField(_("family name"), max_length=500, blank=True)
+    name = models.CharField(_("name"), max_length=500, blank=True)
+    email = models.EmailField(_("email"), blank=True)
+    picture_url = models.URLField(_("picture URL"), blank=True)
+    auth_user = models.ForeignKey(
+        settings.AUTH_USER_MODEL,
+        related_name="lti_users",
+        null=True,
+        blank=True,
+        on_delete=models.SET_NULL,
+        verbose_name=_("auth user"),
+    )
+    datetime_created = models.DateTimeField(_("created"), default=now, editable=False)
+    datetime_modified = models.DateTimeField(_("modified"), auto_now=True)
+
+    class Meta:
+        verbose_name = _("LTI user")
+        verbose_name_plural = _("LTI users")
+        constraints = [
+            models.UniqueConstraint(
+                fields=["registration", "sub"], name="unique_sub_per_registration"
+            )
+        ]
+
+    def __str__(self):
+        return self.sub
+
+
+class LtiContext(models.Model):
+    """Describes the context of a LTI launch.
+
+    The context claim are described in the LTI spec at
+    https://www.imsglobal.org/spec/lti/v1p3/#context-claim
+    """
+
+    deployment = models.ForeignKey(
+        LtiDeployment,
+        related_name="contexts",
+        on_delete=models.CASCADE,
+        verbose_name=_("deployment"),
+    )
+    id_on_platform = models.CharField(_("ID on platform"), max_length=255, blank=True)
+    label = models.CharField(_("label"), max_length=255, blank=True)
+    title = models.CharField(_("title"), max_length=500, blank=True)
+    members = models.ManyToManyField(
+        LtiUser,
+        related_name="contexts",
+        through="LtiMembership",
+        verbose_name="members",
+    )
+    is_course_template = models.BooleanField(_("is course template"), default=False)
+    is_course_offering = models.BooleanField(_("is course offering"), default=False)
+    is_course_section = models.BooleanField(_("is course section"), default=False)
+    is_group = models.BooleanField(_("is group"), default=False)
+    datetime_created = models.DateTimeField(_("created"), default=now, editable=False)
+    datetime_modified = models.DateTimeField(_("modified"), auto_now=True)
+
+    class Meta:
+        verbose_name = _("LTI context")
+        verbose_name_plural = _("LTI contexts")
+        constraints = [
+            models.UniqueConstraint(
+                fields=["deployment", "id_on_platform"],
+                name="unique_context_id_per_deployment",
+            )
+        ]
+
+    def __str__(self):
+        return self.title if self.title else self.id_on_platform
+
+
+class LtiMembership(models.Model):
+    """A user's role within a learning context.
+
+    Roles are described in the LTI spec at
+    https://www.imsglobal.org/spec/lti/v1p3/#roles-claim
+    """
+
+    user = models.ForeignKey(
+        LtiUser,
+        related_name="memberships",
+        on_delete=models.CASCADE,
+        verbose_name=_("user"),
+    )
+    context = models.ForeignKey(
+        LtiContext,
+        related_name="memberships",
+        on_delete=models.CASCADE,
+        verbose_name=_("context"),
+    )
+    is_administrator = models.BooleanField(_("is administrator"), default=False)
+    is_content_developer = models.BooleanField(_("is_content_developer"), default=False)
+    is_instructor = models.BooleanField(_("is instructor"), default=False)
+    is_learner = models.BooleanField(_("is learner"), default=False)
+    is_mentor = models.BooleanField(_("is mentor"), default=False)
+    datetime_created = models.DateTimeField(_("created"), default=now, editable=False)
+    datetime_modified = models.DateTimeField(_("modified"), auto_now=True)
+
+    class Meta:
+        verbose_name = _("LTI membership")
+        verbose_name_plural = _("LTI memberships")
+        constraints = [
+            models.UniqueConstraint(
+                fields=["user", "context"], name="no_duplicate_memberships"
+            )
+        ]
+
+    def __str__(self):
+        return f"{self.user} in {self.context}"
+
+
+class LtiResourceLink(models.Model):
+    """Represents a resource link in an LTI launch.
+
+    The resource link claim is described in the LTI spec at
+    https://www.imsglobal.org/spec/lti/v1p3/#resource-link-claim
+    """
+
+    context = models.ForeignKey(
+        LtiContext,
+        related_name="resource_links",
+        on_delete=models.CASCADE,
+        verbose_name=_("context"),
+    )
+    id_on_platform = models.CharField(_("ID on platform"), max_length=255)
+    title = models.CharField(_("title"), max_length=500, blank=True)
+    description = models.TextField(_("description"), blank=True)
+    datetime_created = models.DateTimeField(_("created"), default=now, editable=False)
+    datetime_modified = models.DateTimeField(_("modified"), auto_now=True)
+
+    class Meta:
+        verbose_name = _("LTI resource link")
+        verbose_name_plural = _("LTI resource links")
+        constraints = [
+            models.UniqueConstraint(
+                fields=["context", "id_on_platform"],
+                name="unique_resource_link_id_per_context",
+            )
+        ]
+
+    def __str__(self):
+        return self.title if self.title else self.id_on_platform
 
 
 class LtiLaunch:
@@ -268,6 +470,82 @@ class LtiLaunch:
         if message_launch is None:
             return False
         return message_launch.is_data_privacy_launch()
+
+    @cached_property
+    def registration(self) -> LtiRegistration:
+        tool_conf = self.get_message_launch().get_tool_conf()
+        return tool_conf.registration
+
+    @cached_property
+    def deployment(self) -> LtiDeployment:
+        tool_conf = self.get_message_launch()._tool_config
+        if tool_conf.deployment is not None:
+            return tool_conf.deployment
+        deployment_id = self.get_claim(
+            "https://purl.imsglobal.org/spec/lti/claim/deployment_id"
+        )
+        return LtiDeployment.objects.get(
+            registration=self.registration, deployment_id=deployment_id
+        )
+
+    @cached_property
+    def user(self) -> LtiUser:
+        return LtiUser.objects.get(
+            registration=self.registration, sub=self.get_claim("sub")
+        )
+
+    @property
+    def context_claim(self):
+        return self.get_claim("https://purl.imsglobal.org/spec/lti/claim/context")
+
+    @cached_property
+    def context(self) -> LtiContext:
+        context_id = self.context_claim["id"] if self.context_claim is not None else ""
+        return LtiContext.objects.get(
+            deployment=self.deployment, id_on_platform=context_id
+        )
+
+    @property
+    def roles_claim(self):
+        return self.get_claim("https://purl.imsglobal.org/spec/lti/claim/roles")
+
+    @cached_property
+    def membership(self) -> LtiMembership:
+        issuer = self.get_claim("iss")
+        client_id = self.get_claim("aud")
+        sub = self.get_claim("sub")
+        context_id = self.context_claim["id"] if self.context_claim is not None else ""
+        return LtiMembership.objects.get(
+            user__registration__issuer=issuer,
+            user__registration__client_id=client_id,
+            user__sub=sub,
+            context__id_on_platform=context_id,
+        )
+
+    @property
+    def resource_link_claim(self):
+        return self.get_claim("https://purl.imsglobal.org/spec/lti/claim/resource_link")
+
+    @cached_property
+    def resource_link(self) -> LtiResourceLink:
+        context_id = self.context_claim["id"] if self.context_claim is not None else ""
+        return LtiResourceLink.objects.get(
+            context__deployment=self.deployment,
+            context__id_on_platform=context_id,
+            id_on_platform=self.resource_link_claim["id"],
+        )
+
+    @property
+    def platform_instance_claim(self):
+        return self.get_claim("https://purl.imsglobal.org/spec/lti/claim/tool_platform")
+
+    @cached_property
+    def platform_instance(self) -> LtiPlatformInstance:
+        if self.platform_instance_claim is None:
+            return None
+        return LtiPlatformInstance.objects.get(
+            issuer=self.get_claim("iss"), guid=self.platform_instance_claim["guid"]
+        )
 
     @property
     def launch_presentation_claim(self):

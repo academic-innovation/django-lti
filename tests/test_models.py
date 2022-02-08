@@ -45,3 +45,61 @@ class TestLtiDeployment:
             registration__name="Registration", deployment_id="a-deployment-id"
         )
         assert str(deployment) == "Registration: a-deployment-id"
+
+
+@pytest.mark.django_db
+class TestLtiPlatformInstance:
+    """Tests for the LtiPlatformInstance model."""
+
+    @pytest.mark.parametrize(
+        ("guid", "name", "result"), [("guid", "Name", "Name"), ("guid", "", "guid")]
+    )
+    def test_str(self, guid, name, result):
+        platform_instance = factories.LtiPlatformInstanceFactory(name=name, guid=guid)
+        assert str(platform_instance) == result
+
+
+@pytest.mark.django_db
+class TestLtiUser:
+    """Tests for the LtiUser model."""
+
+    def test_str(self):
+        user = factories.LtiUserFactory(sub="abc123")
+        assert str(user) == "abc123"
+
+
+@pytest.mark.django_db
+class TestLtiContext:
+    """Tests for the LtiContext model."""
+
+    @pytest.mark.parametrize(
+        ("id", "title", "result"),
+        [("abc123", "Title", "Title"), ("abc123", "", "abc123")],
+    )
+    def test_str(self, id, title, result):
+        context = factories.LtiContextFactory(id_on_platform=id, title=title)
+        assert str(context) == result
+
+
+@pytest.mark.django_db
+class TestLtiMembership:
+    """Tests for the LtiMembership model."""
+
+    def test_str(self):
+        membership = factories.LtiMembershipFactory(
+            user__sub="user1234", context__title="Math"
+        )
+        assert str(membership) == "user1234 in Math"
+
+
+@pytest.mark.django_db
+class TestLtiResourceLink:
+    """Tests for the LtiResourceLink model."""
+
+    @pytest.mark.parametrize(
+        ("id", "title", "result"),
+        [("abc123", "Title", "Title"), ("abc123", "", "abc123")],
+    )
+    def test_str(self, id, title, result):
+        resource_link = factories.LtiResourceLinkFactory(id_on_platform=id, title=title)
+        assert str(resource_link) == result
