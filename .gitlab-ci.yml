@@ -1,4 +1,4 @@
-image: python:latest
+image: ${CI_DEPENDENCY_PROXY_GROUP_IMAGE_PREFIX}/python:latest
 
 stages:
   - test
@@ -7,7 +7,7 @@ stages:
 
 quality:
   stage: test
-  image: thekevjames/nox
+  image: ${CI_DEPENDENCY_PROXY_GROUP_IMAGE_PREFIX}/thekevjames/nox
   script:
     - nox
 
