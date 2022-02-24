@@ -1,16 +1,18 @@
 import json
-from typing import Optional, Tuple
+from typing import List, Optional, Tuple
 from urllib import parse
 from uuid import uuid4
 
 from django.conf import settings
 from django.db import models
+from django.http import HttpResponse
 from django.utils.functional import cached_property
 from django.utils.timezone import now
 from django.utils.translation import gettext_lazy as _
 
 from jwcrypto.jwk import JWK
 from pylti1p3.contrib.django.message_launch import DjangoMessageLaunch
+from pylti1p3.deep_link_resource import DeepLinkResource
 
 
 class KeyQuerySet(models.QuerySet):
@@ -608,6 +610,18 @@ class LtiLaunch:
                 url_parts.fragment,
             )
         )
+
+    def deep_link_response(self, resources: List[DeepLinkResource]) -> HttpResponse:
+        """Creates a deep linking response for this launch."""
+        html = self.get_message_launch().get_deep_link().output_response_form(resources)
+        return HttpResponse(html)
+
+    def get_custom_claim(self, claim: str) -> Optional[str]:
+        """Returns a custom claim value, or None if not present."""
+        custom_claims = self.get_claim(
+            "https://purl.imsglobal.org/spec/lti/claim/custom"
+        )
+        return custom_claims.get(claim) if custom_claims is not None else None
 
 
 class AbsentLtiLaunch:
