@@ -251,7 +251,9 @@ def sync_platform_instance_from_launch(
 
 def sync_data_from_launch(lti_launch: LtiLaunch) -> None:
     user = sync_user_from_launch(lti_launch)
-    context = sync_context_from_launch(lti_launch)
-    sync_membership_from_launch(lti_launch, user, context)
-    sync_resource_link_from_launch(lti_launch, context)
+    if not lti_launch.is_data_privacy_launch:
+        context = sync_context_from_launch(lti_launch)
+        sync_membership_from_launch(lti_launch, user, context)
+        if not lti_launch.is_deep_link_launch:
+            sync_resource_link_from_launch(lti_launch, context)
     sync_platform_instance_from_launch(lti_launch)
