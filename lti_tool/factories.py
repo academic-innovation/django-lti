@@ -69,6 +69,7 @@ class LtiContextFactory(factory.django.DjangoModelFactory):
     id_on_platform = factory.Faker("pystr")
     label = factory.Faker("word")
     title = factory.Faker("catch_phrase")
+    memberships_url = factory.Faker("uri")
 
     class Meta:
         model = models.LtiContext

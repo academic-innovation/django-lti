@@ -74,11 +74,56 @@ class TestLtiContext:
 
     @pytest.mark.parametrize(
         ("id", "title", "result"),
-        [("abc123", "Title", "Title"), ("abc123", "", "abc123")],
+        [("ctx-4444", "", "ctx-4444"), ("ctx-4444", "Title", "Title")],
     )
     def test_str(self, id, title, result):
         context = factories.LtiContextFactory(id_on_platform=id, title=title)
         assert str(context) == result
+
+    def test_update_memberships(self):
+        context = factories.LtiContextFactory()
+        member_data = [
+            {
+                "status": "Active",
+                "name": "Jane Q. Public",
+                "picture": "https://platform.example.edu/jane.jpg",
+                "given_name": "Jane",
+                "family_name": "Doe",
+                "email": "jane@platform.example.edu",
+                "user_id": "user_1",
+                "roles": ["Instructor"],
+            },
+            {
+                "status": "Inactive",
+                "user_id": "user_2",
+                "roles": ["http://purl.imsglobal.org/vocab/lis/v2/membership#Learner"],
+            },
+        ]
+        context.update_memberships(member_data)
+
+        member_1 = models.LtiMembership.objects.get(context=context, user__sub="user_1")
+        member_2 = models.LtiMembership.objects.get(context=context, user__sub="user_2")
+
+        assert context.members.count() == 2
+
+        assert not member_1.is_administrator
+        assert not member_1.is_content_developer
+        assert member_1.is_instructor
+        assert not member_1.is_learner
+        assert not member_1.is_mentor
+        assert member_1.is_active
+        assert member_1.user.name == "Jane Q. Public"
+        assert member_1.user.given_name == "Jane"
+        assert member_1.user.family_name == "Doe"
+        assert member_1.user.picture_url == "https://platform.example.edu/jane.jpg"
+        assert member_1.user.email == "jane@platform.example.edu"
+
+        assert not member_2.is_administrator
+        assert not member_2.is_content_developer
+        assert not member_2.is_instructor
+        assert member_2.is_learner
+        assert not member_2.is_mentor
+        assert not member_2.is_active
 
 
 @pytest.mark.django_db
@@ -90,6 +135,23 @@ class TestLtiMembership:
             user__sub="user1234", context__title="Math"
         )
         assert str(membership) == "user1234 in Math"
+
+    @pytest.mark.parametrize(
+        ("input", "output"),
+        [
+            ("Learner", "http://purl.imsglobal.org/vocab/lis/v2/membership#Learner"),
+            (
+                "http://purl.imsglobal.org/vocab/lis/v2/membership#Learner",
+                "http://purl.imsglobal.org/vocab/lis/v2/membership#Learner",
+            ),
+            (
+                "http://purl.imsglobal.org/vocab/lis/v2/institution/person#Staff",
+                "http://purl.imsglobal.org/vocab/lis/v2/institution/person#Staff",
+            ),
+        ],
+    )
+    def test_normalize_role(self, input, output):
+        assert models.LtiMembership.normalize_role(input) == output
 
 
 @pytest.mark.django_db
