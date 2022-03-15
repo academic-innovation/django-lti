@@ -1,4 +1,5 @@
 import json
+import re
 from typing import List, Optional, Tuple
 from urllib import parse
 from uuid import uuid4
@@ -13,6 +14,9 @@ from django.utils.translation import gettext_lazy as _
 from jwcrypto.jwk import JWK
 from pylti1p3.contrib.django.message_launch import DjangoMessageLaunch
 from pylti1p3.deep_link_resource import DeepLinkResource
+from pylti1p3.registration import Registration
+
+from .constants import ContextRole
 
 
 class KeyQuerySet(models.QuerySet):
@@ -150,6 +154,24 @@ class LtiRegistration(models.Model):
     def has_key(self):
         """bool: Indicates if the registration has an assigned keypair."""
         return self.public_key and self.private_key
+
+    def to_registration(self) -> Registration:
+        reg = Registration()
+        reg.set_auth_login_url(self.auth_url)
+        reg.set_auth_token_url(self.token_url)
+        # reg.set_auth_audience(auth_audience)
+        reg.set_client_id(self.client_id)
+        # reg.set_key_set(key_set)
+        reg.set_key_set_url(self.keyset_url)
+        reg.set_issuer(self.issuer)
+        if self.has_key:
+            reg.set_tool_public_key(self.public_key)
+            reg.set_tool_private_key(self.private_key)
+        else:
+            key = Key.objects.active().latest()
+            reg.set_tool_private_key(key.private_key)
+            reg.set_tool_public_key(key.public_key)
+        return reg
 
 
 class LtiPlatformInstance(models.Model):
@@ -311,6 +333,7 @@ class LtiContext(models.Model):
     is_course_template = models.BooleanField(_("is course template"), default=False)
     is_course_offering = models.BooleanField(_("is course offering"), default=False)
     is_course_section = models.BooleanField(_("is course section"), default=False)
+    memberships_url = models.URLField(blank=True)
     is_group = models.BooleanField(_("is group"), default=False)
     datetime_created = models.DateTimeField(_("created"), default=now, editable=False)
     datetime_modified = models.DateTimeField(_("modified"), auto_now=True)
@@ -327,6 +350,39 @@ class LtiContext(models.Model):
 
     def __str__(self):
         return self.title if self.title else self.id_on_platform
+
+    def update_memberships(self, member_data: List[dict]):
+        """Updates memberships for this context using NRPS data."""
+        registration = self.deployment.registration
+        for member in member_data:
+            user_defaults = {
+                "given_name": member.get("given_name"),
+                "family_name": member.get("family_name"),
+                "name": member.get("name"),
+                "email": member.get("email"),
+                "picture_url": member.get("picture"),
+            }
+            user, _created = LtiUser.objects.update_or_create(
+                registration=registration,
+                sub=member["user_id"],
+                defaults={k: v for (k, v) in user_defaults.items() if v is not None},
+            )
+            member_roles = [
+                LtiMembership.normalize_role(role) for role in member["roles"]
+            ]
+            LtiMembership.objects.update_or_create(
+                context=self,
+                user=user,
+                defaults={
+                    "is_administrator": ContextRole.ADMINISTRATOR in member_roles,
+                    "is_content_developer": ContextRole.CONTENT_DEVELOPER
+                    in member_roles,
+                    "is_instructor": ContextRole.INSTRUCTOR in member_roles,
+                    "is_learner": ContextRole.LEARNER in member_roles,
+                    "is_mentor": ContextRole.MENTOR in member_roles,
+                    "is_active": member["status"] == "Active",
+                },
+            )
 
 
 class LtiMembership(models.Model):
@@ -353,6 +409,7 @@ class LtiMembership(models.Model):
     is_instructor = models.BooleanField(_("is instructor"), default=False)
     is_learner = models.BooleanField(_("is learner"), default=False)
     is_mentor = models.BooleanField(_("is mentor"), default=False)
+    is_active = models.BooleanField(_("is active"), default=True)
     datetime_created = models.DateTimeField(_("created"), default=now, editable=False)
     datetime_modified = models.DateTimeField(_("modified"), auto_now=True)
 
@@ -367,6 +424,13 @@ class LtiMembership(models.Model):
 
     def __str__(self):
         return f"{self.user} in {self.context}"
+
+    @classmethod
+    def normalize_role(cls, role: str) -> str:
+        """Expands a simple context role to a full URI, if needed."""
+        if re.match(r"^\w+$", role):
+            return f"http://purl.imsglobal.org/vocab/lis/v2/membership#{role}"
+        return role
 
 
 class LtiResourceLink(models.Model):
@@ -494,6 +558,12 @@ class LtiLaunch:
     def user(self) -> LtiUser:
         return LtiUser.objects.get(
             registration=self.registration, sub=self.get_claim("sub")
+        )
+
+    @property
+    def nrps_claim(self):
+        return self.get_claim(
+            "https://purl.imsglobal.org/spec/lti-nrps/claim/namesroleservice"
         )
 
     @property

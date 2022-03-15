@@ -5,11 +5,10 @@ from django.http.request import HttpRequest
 from pylti1p3.contrib.django.launch_data_storage.cache import DjangoCacheDataStorage
 from pylti1p3.contrib.django.message_launch import DjangoMessageLaunch
 from pylti1p3.deployment import Deployment
-from pylti1p3.registration import Registration
 from pylti1p3.tool_config.abstract import ToolConfAbstract
 
+from .constants import ContextRole
 from .models import (
-    Key,
     LtiContext,
     LtiDeployment,
     LtiLaunch,
@@ -19,25 +18,6 @@ from .models import (
     LtiResourceLink,
     LtiUser,
 )
-
-
-def _prepare_registraion(lti_registration):
-    reg = Registration()
-    reg.set_auth_login_url(lti_registration.auth_url)
-    reg.set_auth_token_url(lti_registration.token_url)
-    # reg.set_auth_audience(auth_audience)
-    reg.set_client_id(lti_registration.client_id)
-    # reg.set_key_set(key_set)
-    reg.set_key_set_url(lti_registration.keyset_url)
-    reg.set_issuer(lti_registration.issuer)
-    if lti_registration.has_key:
-        reg.set_tool_public_key(lti_registration.public_key)
-        reg.set_tool_private_key(lti_registration.private_key)
-    else:
-        key = Key.objects.active().latest()
-        reg.set_tool_private_key(key.private_key)
-        reg.set_tool_public_key(key.public_key)
-    return reg
 
 
 def _prepare_deployment(lti_deployment):
@@ -70,7 +50,7 @@ class DjangoToolConfig(ToolConfAbstract):
             self.registration = LtiRegistration.objects.active().get(
                 uuid=self.registration_uuid, issuer=iss
             )
-            return _prepare_registraion(self.registration)
+            return self.registration.to_registration()
         except LtiRegistration.DoesNotExist:
             return None
 
@@ -80,7 +60,7 @@ class DjangoToolConfig(ToolConfAbstract):
             lookups.update(uuid=self.registration_uuid)
         try:
             self.registration = LtiRegistration.objects.active().get(**lookups)
-            return _prepare_registraion(self.registration)
+            return self.registration.to_registration()
         except LtiRegistration.DoesNotExist:
             return None
 
@@ -154,10 +134,14 @@ def sync_user_from_launch(lti_launch: LtiLaunch) -> LtiUser:
 
 def sync_context_from_launch(lti_launch: LtiLaunch) -> LtiContext:
     context_claim = lti_launch.context_claim
+    nrps_claim = lti_launch.nrps_claim
+    nrps_endpoint = "" if nrps_claim is None else nrps_claim["context_memberships_url"]
     context_types = [] if context_claim is None else context_claim.get("type", [])
     if context_claim is None:
         context, _created = LtiContext.objects.get_or_create(
-            deployment=lti_launch.deployment, id_on_platform=""
+            deployment=lti_launch.deployment,
+            id_on_platform="",
+            memberships_url=nrps_endpoint,
         )
     else:
         defaults = {
@@ -179,6 +163,8 @@ def sync_context_from_launch(lti_launch: LtiLaunch) -> LtiContext:
                 "http://purl.imsglobal.org/vocab/lis/v2/course#Group" in context_types
             ),
         }
+        if nrps_endpoint:
+            defaults["memberships_url"] = nrps_endpoint
         context, _created = LtiContext.objects.update_or_create(
             deployment=lti_launch.deployment,
             id_on_platform=context_claim["id"],
@@ -190,17 +176,17 @@ def sync_context_from_launch(lti_launch: LtiLaunch) -> LtiContext:
 def sync_membership_from_launch(
     lti_launch: LtiLaunch, user: LtiUser, context: LtiContext
 ) -> LtiMembership:
-    roles = lti_launch.roles_claim
+    roles = [LtiMembership.normalize_role(role) for role in lti_launch.roles_claim]
     defaults = {}
-    if "http://purl.imsglobal.org/vocab/lis/v2/membership#Administrator" in roles:
+    if ContextRole.ADMINISTRATOR in roles:
         defaults["is_administrator"] = True
-    if "http://purl.imsglobal.org/vocab/lis/v2/membership#ContentDeveloper" in roles:
+    if ContextRole.CONTENT_DEVELOPER in roles:
         defaults["is_content_developer"] = True
-    if "http://purl.imsglobal.org/vocab/lis/v2/membership#Instructor" in roles:
+    if ContextRole.INSTRUCTOR in roles:
         defaults["is_instructor"] = True
-    if "http://purl.imsglobal.org/vocab/lis/v2/membership#Learner" in roles:
+    if ContextRole.LEARNER in roles:
         defaults["is_learner"] = True
-    if "http://purl.imsglobal.org/vocab/lis/v2/membership#Mentor" in roles:
+    if ContextRole.MENTOR in roles:
         defaults["is_mentor"] = True
     membership, _created = LtiMembership.objects.update_or_create(
         user=user, context=context, defaults=defaults
