@@ -146,12 +146,18 @@ class TestSyncMembershipFromLaunch:
 class TestSyncResourceLinkFromLaunch:
     """Tests for utils.sync_resource_link_from_launch."""
 
-    def test_sync_new_resource_link(self, monkeypatch):
+    @pytest.mark.parametrize(
+        ["claim_title", "claim_description", "title", "description"],
+        [("Title", "Description", "Title", "Description"), (None, None, "", "")],
+    )
+    def test_sync_new_resource_link(
+        self, monkeypatch, claim_title, claim_description, title, description
+    ):
         context = factories.LtiContextFactory()
         resource_link_claim = {
             "id": "resource-link-id",
-            "title": "Title",
-            "description": "Description",
+            "title": claim_title,
+            "description": claim_description,
         }
         monkeypatch.setattr(
             models.LtiLaunch, "resource_link_claim", resource_link_claim
@@ -159,16 +165,22 @@ class TestSyncResourceLinkFromLaunch:
         lti_launch = models.LtiLaunch(None)
         resource_link = utils.sync_resource_link_from_launch(lti_launch, context)
         assert resource_link.id_on_platform == "resource-link-id"
-        assert resource_link.title == "Title"
-        assert resource_link.description == "Description"
+        assert resource_link.title == title
+        assert resource_link.description == description
 
-    def test_sync_existing_resource_link(self, monkeypatch):
+    @pytest.mark.parametrize(
+        ["claim_title", "claim_description", "title", "description"],
+        [("Title", "Description", "Title", "Description"), (None, None, "", "")],
+    )
+    def test_sync_existing_resource_link(
+        self, monkeypatch, claim_title, claim_description, title, description
+    ):
         context = factories.LtiContextFactory()
         resource_link = factories.LtiResourceLinkFactory(context=context)
         resource_link_claim = {
             "id": resource_link.id_on_platform,
-            "title": "New Title",
-            "description": "New description",
+            "title": claim_title,
+            "description": claim_description,
         }
         monkeypatch.setattr(
             models.LtiLaunch, "resource_link_claim", resource_link_claim
@@ -176,8 +188,8 @@ class TestSyncResourceLinkFromLaunch:
         lti_launch = models.LtiLaunch(None)
         resource_link = utils.sync_resource_link_from_launch(lti_launch, context)
         assert models.LtiResourceLink.objects.count() == 1
-        assert resource_link.title == "New Title"
-        assert resource_link.description == "New description"
+        assert resource_link.title == title
+        assert resource_link.description == description
 
 
 @pytest.mark.django_db
