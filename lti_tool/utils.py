@@ -197,7 +197,9 @@ def sync_membership_from_launch(
 def sync_resource_link_from_launch(
     lti_launch: LtiLaunch, context: LtiContext
 ) -> LtiResourceLink:
-    resource_link_claim = lti_launch.resource_link_claim
+    resource_link_claim = {
+        k: v for k, v in lti_launch.resource_link_claim.items() if v is not None
+    }
     resource_link, _created = LtiResourceLink.objects.update_or_create(
         context=context,
         id_on_platform=resource_link_claim["id"],
