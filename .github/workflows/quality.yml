@@ -1,7 +1,34 @@
 name: Run quality checks
 on: [push]
 jobs:
-  quality-checks:
+  lint:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v2
+      - uses: actions/setup-python@v2
+        with:
+          python-version: '3.9'
+      - run: pip install --user --upgrade nox
+      - run: nox -s lint
+  sort:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v2
+      - uses: actions/setup-python@v2
+        with:
+          python-version: '3.9'
+      - run: pip install --user --upgrade nox
+      - run: nox -s sort
+  format:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v2
+      - uses: actions/setup-python@v2
+        with:
+          python-version: '3.9'
+      - run: pip install --user --upgrade nox
+      - run: nox -s format
+  test:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v2
@@ -21,4 +48,4 @@ jobs:
         with:
           python-version: '3.10'
       - run: pip install --user --upgrade nox
-      - run: nox
+      - run: nox -s test
