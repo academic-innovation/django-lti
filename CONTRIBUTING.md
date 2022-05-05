@@ -5,12 +5,12 @@ issues to work on. Follow the steps below to get started.
 
 ## Step 0: Setup your SSH key
 
-Start by [adding your SSH key to GitLab][2].
+Start by [adding your SSH key to GitHub][2].
 
 ## Step 1: Clone the repo
 
 ```
-git clone git@gitlab.umich.edu:academic-innovation/lti/django-lti.git
+git clone git@github.com:academic-innovation/django-lti.git
 ```
 
 ## Step 2: Install development dependencies
@@ -28,14 +28,14 @@ git checkout -b my-awsome-feature main
 
 ## Step 4: Run quality checks
 
-Before submitting a merge request, run quality checks locally
+Before submitting a pull request, run quality checks locally
 with `nox`.
 
-## Step 5: Push your branch and create a merge request
+## Step 5: Push your branch and create a pull request
 
 ```
 git push origin my-awesome-feature
 ```
 
-[1]: https://gitlab.umich.edu/academic-innovation/lti/django-lti/-/issues?label_name%5B%5D=help+wanted
-[2]: https://gitlab.umich.edu/-/profile/keys
+[1]: https://github.com/academic-innovation/django-lti/issues?q=is%3Aopen+is%3Aissue+label%3A%22help+wanted%22
+[2]: https://github.com/settings/keys
