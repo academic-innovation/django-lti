@@ -30,22 +30,19 @@ jobs:
       - run: nox -s format
   test:
     runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        python: ['3.6', '3.7', '3.8', '3.9', '3.10']
+        django: ['3.2.0', '4.0.0']
+        exclude:
+          - python: '3.6'
+            django: '4.0.0'
+          - python: '3.6'
+            django: '4.0.0'
     steps:
       - uses: actions/checkout@v2
       - uses: actions/setup-python@v2
         with:
-          python-version: '3.6'
-      - uses: actions/setup-python@v2
-        with:
-          python-version: '3.7'
-      - uses: actions/setup-python@v2
-        with:
-          python-version: '3.8'
-      - uses: actions/setup-python@v2
-        with:
-          python-version: '3.9'
-      - uses: actions/setup-python@v2
-        with:
-          python-version: '3.10'
+          python-version: ${{ matrix.python }}
       - run: pip install --user --upgrade nox
-      - run: nox -s test
+      - run: nox -s "test(python='${{ matrix.python }}', django='${{ matrix.django }}')"
