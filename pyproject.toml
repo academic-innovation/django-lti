@@ -11,3 +11,17 @@ line_length = 88
 known_django = 'django'
 skip_glob = '**/migrations/*.py,venv/*,env/*'
 sections = 'FUTURE,STDLIB,DJANGO,THIRDPARTY,FIRSTPARTY,LOCALFOLDER'
+
+[tool.mypy]
+plugins = ["mypy_django_plugin.main"]
+
+[tool.django-stubs]
+django_settings_module = "tests.settings"
+
+[[tool.mypy.overrides]]
+module = [
+    "factory.*",
+    "jwcrypto.*",
+    "setuptools.*"
+]
+ignore_missing_imports = true

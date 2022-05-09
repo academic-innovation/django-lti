@@ -28,6 +28,15 @@ jobs:
           python-version: '3.9'
       - run: pip install --user --upgrade nox
       - run: nox -s format
+  types:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v2
+      - uses: actions/setup-python@v2
+        with:
+          python-version: '3.9'
+      - run: pip install --user --upgrade nox
+      - run: nox -s types
   test:
     runs-on: ubuntu-latest
     strategy:

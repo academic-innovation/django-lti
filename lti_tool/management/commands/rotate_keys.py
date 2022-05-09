@@ -1,5 +1,5 @@
 from datetime import timedelta
-from typing import Any, Optional
+from typing import Any
 
 import django.utils.timezone as tz
 from django.core.management.base import BaseCommand, CommandParser
@@ -20,7 +20,7 @@ class Command(BaseCommand):
             help="The age in days beyond which keys should be deactivated.",
         )
 
-    def handle(self, *args: Any, **options: Any) -> Optional[str]:
+    def handle(self, *args: Any, **options: Any) -> None:
         now = tz.now()
         days = timedelta(days=options["deactivate_after"])
         try:
