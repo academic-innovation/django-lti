@@ -31,7 +31,7 @@ class KeyQuerySet(models.QuerySet):
         return {"keys": [key.as_jwk() for key in self.active()]}
 
 
-class KeyManager(models.Manager):
+class BaseKeyManager(models.Manager):
     """Manager for Key objects."""
 
     def create_from_jwk(self, key):
@@ -59,6 +59,9 @@ class KeyManager(models.Manager):
         return self.create_from_jwk(JWK.generate(kty="RSA", size=2048))
 
 
+KeyManager = BaseKeyManager.from_queryset(KeyQuerySet)
+
+
 class Key(models.Model):
     """A keypair for use in LTI integrations.
 
@@ -76,7 +79,7 @@ class Key(models.Model):
     datetime_created = models.DateTimeField(_("created"), default=now, editable=False)
     datetime_modified = models.DateTimeField(_("modified"), auto_now=True)
 
-    objects = KeyManager.from_queryset(KeyQuerySet)()
+    objects = KeyManager()
 
     class Meta:
         verbose_name = _("JWK")
@@ -612,7 +615,7 @@ class LtiLaunch:
         return self.get_claim("https://purl.imsglobal.org/spec/lti/claim/tool_platform")
 
     @cached_property
-    def platform_instance(self) -> LtiPlatformInstance:
+    def platform_instance(self) -> Optional[LtiPlatformInstance]:
         if self.platform_instance_claim is None:
             return None
         return LtiPlatformInstance.objects.get(

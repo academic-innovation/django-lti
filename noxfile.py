@@ -23,6 +23,13 @@ def format(session):
 
 
 @nox.session
+def types(session):
+    """Check types using mypy."""
+    session.install("-r", "requirements.txt")
+    session.run("mypy", ".")
+
+
+@nox.session
 @nox.parametrize(
     "python,django",
     [

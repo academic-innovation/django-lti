@@ -17,6 +17,7 @@ from lti_tool.utils import DjangoToolConfig, get_launch_from_request
 
 from .constants import SESSION_KEY
 from .models import Key, LtiLaunch
+from .types import LtiHttpRequest
 from .utils import sync_data_from_launch
 
 
@@ -62,7 +63,7 @@ class LtiLaunchBaseView(View):
     message types can be handled as well by overriding the appropriate method.
     """
 
-    def post(self, request: HttpRequest, *args, **kwargs):
+    def post(self, request: LtiHttpRequest, *args, **kwargs):
         request.session.clear()
         lti_launch = get_launch_from_request(request)
         sync_data_from_launch(lti_launch)
