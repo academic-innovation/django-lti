@@ -1,6 +1,6 @@
 import json
 import re
-from typing import List, Optional, Tuple
+from typing import List, NamedTuple, Optional
 from urllib import parse
 from uuid import uuid4
 
@@ -469,6 +469,11 @@ class LtiResourceLink(models.Model):
         return self.title if self.title else self.id_on_platform
 
 
+class ViewportDimensions(NamedTuple):
+    width: int
+    height: int
+
+
 class LtiLaunch:
     """A LTI launch."""
 
@@ -638,13 +643,13 @@ class LtiLaunch:
         return self.launch_presentation_claim.get("document_target")
 
     @property
-    def dimensions(self) -> Optional[Tuple[int, int]]:
+    def dimensions(self) -> Optional[ViewportDimensions]:
         """Width and height of the window or frame in which the launch is presented.
 
         See https://www.imsglobal.org/spec/lti/v1p3/#launch-presentation-claim"""
         if self.launch_presentation_claim is None:
             return None
-        dimensions = (
+        dimensions = ViewportDimensions(
             self.launch_presentation_claim.get("width"),
             self.launch_presentation_claim.get("height"),
         )
