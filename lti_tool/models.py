@@ -1,5 +1,4 @@
 import json
-import re
 from typing import List, NamedTuple, Optional
 from urllib import parse
 from uuid import uuid4
@@ -356,6 +355,8 @@ class LtiContext(models.Model):
 
     def update_memberships(self, member_data: List[dict]):
         """Updates memberships for this context using NRPS data."""
+        from .utils import normalize_role
+
         registration = self.deployment.registration
         for member in member_data:
             user_defaults = {
@@ -370,9 +371,7 @@ class LtiContext(models.Model):
                 sub=member["user_id"],
                 defaults={k: v for (k, v) in user_defaults.items() if v is not None},
             )
-            member_roles = [
-                LtiMembership.normalize_role(role) for role in member["roles"]
-            ]
+            member_roles = [normalize_role(role) for role in member["roles"]]
             LtiMembership.objects.update_or_create(
                 context=self,
                 user=user,
@@ -427,13 +426,6 @@ class LtiMembership(models.Model):
 
     def __str__(self):
         return f"{self.user} in {self.context}"
-
-    @classmethod
-    def normalize_role(cls, role: str) -> str:
-        """Expands a simple context role to a full URI, if needed."""
-        if re.match(r"^\w+$", role):
-            return f"http://purl.imsglobal.org/vocab/lis/v2/membership#{role}"
-        return role
 
 
 class LtiResourceLink(models.Model):

@@ -1,3 +1,4 @@
+import re
 from typing import Optional
 
 from django.http.request import HttpRequest
@@ -92,6 +93,13 @@ class DjangoToolConfig(ToolConfAbstract):
             return None
 
 
+def normalize_role(role: str) -> str:
+    """Expands a simple context role to a full URI, if needed."""
+    if re.match(r"^\w+$", role):
+        return f"http://purl.imsglobal.org/vocab/lis/v2/membership#{role}"
+    return role
+
+
 def get_launch_from_request(
     request: HttpRequest, launch_id: Optional[str] = None
 ) -> LtiLaunch:
@@ -176,7 +184,7 @@ def sync_context_from_launch(lti_launch: LtiLaunch) -> LtiContext:
 def sync_membership_from_launch(
     lti_launch: LtiLaunch, user: LtiUser, context: LtiContext
 ) -> LtiMembership:
-    roles = [LtiMembership.normalize_role(role) for role in lti_launch.roles_claim]
+    roles = [normalize_role(role) for role in lti_launch.roles_claim]
     defaults = {}
     if ContextRole.ADMINISTRATOR in roles:
         defaults["is_administrator"] = True
