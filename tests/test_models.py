@@ -136,23 +136,6 @@ class TestLtiMembership:
         )
         assert str(membership) == "user1234 in Math"
 
-    @pytest.mark.parametrize(
-        ("input", "output"),
-        [
-            ("Learner", "http://purl.imsglobal.org/vocab/lis/v2/membership#Learner"),
-            (
-                "http://purl.imsglobal.org/vocab/lis/v2/membership#Learner",
-                "http://purl.imsglobal.org/vocab/lis/v2/membership#Learner",
-            ),
-            (
-                "http://purl.imsglobal.org/vocab/lis/v2/institution/person#Staff",
-                "http://purl.imsglobal.org/vocab/lis/v2/institution/person#Staff",
-            ),
-        ],
-    )
-    def test_normalize_role(self, input, output):
-        assert models.LtiMembership.normalize_role(input) == output
-
 
 @pytest.mark.django_db
 class TestLtiResourceLink:
