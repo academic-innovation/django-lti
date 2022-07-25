@@ -629,7 +629,8 @@ class LtiLaunch:
     def document_target(self) -> Optional[str]:
         """The kind of browser window or frame in which the launch is presented.
 
-        See https://www.imsglobal.org/spec/lti/v1p3/#launch-presentation-claim"""
+        See https://www.imsglobal.org/spec/lti/v1p3/#launch-presentation-claim
+        """
         if self.launch_presentation_claim is None:
             return None
         return self.launch_presentation_claim.get("document_target")
@@ -638,7 +639,8 @@ class LtiLaunch:
     def dimensions(self) -> Optional[ViewportDimensions]:
         """Width and height of the window or frame in which the launch is presented.
 
-        See https://www.imsglobal.org/spec/lti/v1p3/#launch-presentation-claim"""
+        See https://www.imsglobal.org/spec/lti/v1p3/#launch-presentation-claim
+        """
         if self.launch_presentation_claim is None:
             return None
         dimensions = ViewportDimensions(

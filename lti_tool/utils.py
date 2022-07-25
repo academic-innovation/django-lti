@@ -103,12 +103,10 @@ def normalize_role(role: str) -> str:
 def get_launch_from_request(
     request: HttpRequest, launch_id: Optional[str] = None
 ) -> LtiLaunch:
-    """
-    Returns the DjangoMessageLaunch associated with a request.
+    """Returns the DjangoMessageLaunch associated with a request.
 
     Optionally, a launch_id may be specified to retrieve the launch from the cache.
     """
-
     tool_conf = DjangoToolConfig()
     launch_data_storage = DjangoCacheDataStorage()
     if launch_id is not None:
