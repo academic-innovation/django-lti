@@ -8,7 +8,7 @@ from pylti1p3.contrib.django.message_launch import DjangoMessageLaunch
 from pylti1p3.deployment import Deployment
 from pylti1p3.tool_config.abstract import ToolConfAbstract
 
-from .constants import ContextRole
+from .constants import AgsScope, ContextRole
 from .models import (
     LtiContext,
     LtiDeployment,
@@ -138,44 +138,53 @@ def sync_user_from_launch(lti_launch: LtiLaunch) -> LtiUser:
     return lti_user
 
 
+def _get_ags_props(lti_launch: LtiLaunch) -> dict:
+    ags_claim = lti_launch.ags_claim
+    if ags_claim is None:
+        return {}
+    ags_scope = ags_claim.get("scope", [])
+    return {
+        "lineitems_url": ags_claim.get("lineitems", ""),
+        "can_query_lineitems": AgsScope.QUERY_LINEITEMS in ags_scope,
+        "can_manage_lineitems": AgsScope.MANAGE_LINEITEMS in ags_scope,
+        "can_publish_scores": AgsScope.PUBLISH_SCORES in ags_scope,
+        "can_access_results": AgsScope.ACCESS_RESULTS in ags_scope,
+    }
+
+
 def sync_context_from_launch(lti_launch: LtiLaunch) -> LtiContext:
     context_claim = lti_launch.context_claim
+    context_claim = {} if lti_launch.context_claim is None else lti_launch.context_claim
     nrps_claim = lti_launch.nrps_claim
     nrps_endpoint = "" if nrps_claim is None else nrps_claim["context_memberships_url"]
-    context_types = [] if context_claim is None else context_claim.get("type", [])
-    if context_claim is None:
-        context, _created = LtiContext.objects.get_or_create(
-            deployment=lti_launch.deployment,
-            id_on_platform="",
-            memberships_url=nrps_endpoint,
-        )
-    else:
-        defaults = {
-            "title": context_claim.get("title", ""),
-            "label": context_claim.get("label", ""),
-            "is_course_template": (
-                "http://purl.imsglobal.org/vocab/lis/v2/course#CourseTemplate"
-                in context_types
-            ),
-            "is_course_offering": (
-                "http://purl.imsglobal.org/vocab/lis/v2/course#CourseOffering"
-                in context_types
-            ),
-            "is_course_section": (
-                "http://purl.imsglobal.org/vocab/lis/v2/course#CourseSection"
-                in context_types
-            ),
-            "is_group": (
-                "http://purl.imsglobal.org/vocab/lis/v2/course#Group" in context_types
-            ),
-        }
-        if nrps_endpoint:
-            defaults["memberships_url"] = nrps_endpoint
-        context, _created = LtiContext.objects.update_or_create(
-            deployment=lti_launch.deployment,
-            id_on_platform=context_claim["id"],
-            defaults=defaults,
-        )
+    context_types = context_claim.get("type", [])
+    defaults = {
+        "title": context_claim.get("title", ""),
+        "label": context_claim.get("label", ""),
+        "is_course_template": (
+            "http://purl.imsglobal.org/vocab/lis/v2/course#CourseTemplate"
+            in context_types
+        ),
+        "is_course_offering": (
+            "http://purl.imsglobal.org/vocab/lis/v2/course#CourseOffering"
+            in context_types
+        ),
+        "is_course_section": (
+            "http://purl.imsglobal.org/vocab/lis/v2/course#CourseSection"
+            in context_types
+        ),
+        "is_group": (
+            "http://purl.imsglobal.org/vocab/lis/v2/course#Group" in context_types
+        ),
+    }
+    if nrps_endpoint:
+        defaults["memberships_url"] = nrps_endpoint
+    defaults.update(_get_ags_props(lti_launch))
+    context, _created = LtiContext.objects.update_or_create(
+        deployment=lti_launch.deployment,
+        id_on_platform=context_claim.get("id", ""),
+        defaults=defaults,
+    )
     return context
 
 
