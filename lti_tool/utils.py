@@ -153,7 +153,6 @@ def _get_ags_props(lti_launch: LtiLaunch) -> dict:
 
 
 def sync_context_from_launch(lti_launch: LtiLaunch) -> LtiContext:
-    context_claim = lti_launch.context_claim
     context_claim = {} if lti_launch.context_claim is None else lti_launch.context_claim
     nrps_claim = lti_launch.nrps_claim
     nrps_endpoint = "" if nrps_claim is None else nrps_claim["context_memberships_url"]
