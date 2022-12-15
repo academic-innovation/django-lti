@@ -148,3 +148,35 @@ class TestLtiResourceLink:
     def test_str(self, id, title, result):
         resource_link = factories.LtiResourceLinkFactory(id_on_platform=id, title=title)
         assert str(resource_link) == result
+
+
+@pytest.mark.django_db
+class TestLtiLaunch:
+    """Tests for the LtiLaunch object."""
+
+    def test_membership_with_duplicate_context_ids(self, monkeypatch):
+        previous_membership = factories.LtiMembershipFactory()
+        registration = previous_membership.user.registration
+        new_membership = factories.LtiMembershipFactory(
+            context__deployment__registration=registration,
+            context__id_on_platform=previous_membership.context.id_on_platform,
+            user=previous_membership.user,
+        )
+        new_deployment = new_membership.context.deployment
+        launch_data = {
+            "iss": registration.issuer,
+            "aud": registration.client_id,
+            "sub": new_membership.user.sub,
+            "https://purl.imsglobal.org/spec/lti/claim/deployment_id": (
+                new_deployment.deployment_id
+            ),
+            "https://purl.imsglobal.org/spec/lti/claim/context": {
+                "id": new_membership.context.id_on_platform,
+            },
+        }
+        monkeypatch.setattr(
+            models.LtiLaunch, "get_launch_data", lambda self: launch_data
+        )
+        monkeypatch.setattr(models.LtiLaunch, "deployment", new_deployment)
+        lti_launch = models.LtiLaunch(None)
+        assert lti_launch.membership == new_membership
