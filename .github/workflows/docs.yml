@@ -19,7 +19,7 @@ jobs:
       - run: sphinx-build -M dirhtml docs dist
       - uses: actions/upload-pages-artifact@v1
         with:
-          path: ./dist
+          path: ./dist/dirhtml
   deploy:
     runs-on: ubuntu-latest
     # if: github.event_name == 'push' && github.ref == 'refs/heads/main'
