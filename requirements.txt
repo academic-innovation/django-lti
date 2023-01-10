@@ -6,11 +6,9 @@ flake8-bugbear==21.9.2
 flake8-django==1.1.1
 flake8-docstrings==1.6.0
 flake8==4.0.1
-furo==2022.12.7
 isort==5.10.1
 mypy==0.942
 nox==2021.10.1
 PyLTI1p3==1.10.0
 pytest-django==4.5.1
 pytest==6.2.5
-Sphinx==5.3.0
