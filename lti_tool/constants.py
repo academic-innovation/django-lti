@@ -4,6 +4,8 @@ SESSION_KEY = "_lti_tool_launch_id"
 
 CONTEXT_ROLE_PATTERN = "http://purl.imsglobal.org/vocab/lis/v2/membership#{}"
 
+SYSTEM_ROLE_PATTERN = "http://purl.imsglobal.org/vocab/lis/v2/system/person#{}"
+
 
 class ContextRole(str, Enum):
     ADMINISTRATOR = CONTEXT_ROLE_PATTERN.format("Administrator")
@@ -16,6 +18,26 @@ class ContextRole(str, Enum):
     def short_name(self) -> str:
         """Return the short name of this role."""
         return self.value[len(CONTEXT_ROLE_PATTERN.format("")) :]
+
+    @property
+    def full_name(self) -> str:
+        """Return the full name of this roles."""
+        return self.value
+
+
+class SystemRole(str, Enum):
+    ADMINISTRATOR = SYSTEM_ROLE_PATTERN.format("Administrator")
+    NONE = SYSTEM_ROLE_PATTERN.format("None")
+    ACCOUNT_ADMIN = SYSTEM_ROLE_PATTERN.format("AccountAdmin")
+    CREATOR = SYSTEM_ROLE_PATTERN.format("Creator")
+    SYS_ADMIN = SYSTEM_ROLE_PATTERN.format("SysAdmin")
+    SYS_SUPPORT = SYSTEM_ROLE_PATTERN.format("SysSupport")
+    USER = SYSTEM_ROLE_PATTERN.format("User")
+
+    @property
+    def short_name(self) -> str:
+        """Return the short name of this role."""
+        return self.value[len(SYSTEM_ROLE_PATTERN.format("")) :]
 
     @property
     def full_name(self) -> str:
