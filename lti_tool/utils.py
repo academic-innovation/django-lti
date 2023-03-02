@@ -8,7 +8,7 @@ from pylti1p3.contrib.django.message_launch import DjangoMessageLaunch
 from pylti1p3.deployment import Deployment
 from pylti1p3.tool_config.abstract import ToolConfAbstract
 
-from .constants import ContextRole
+from .constants import ContextRole, ContextType
 from .models import (
     LtiContext,
     LtiDeployment,
@@ -153,21 +153,10 @@ def sync_context_from_launch(lti_launch: LtiLaunch) -> LtiContext:
         defaults = {
             "title": context_claim.get("title", ""),
             "label": context_claim.get("label", ""),
-            "is_course_template": (
-                "http://purl.imsglobal.org/vocab/lis/v2/course#CourseTemplate"
-                in context_types
-            ),
-            "is_course_offering": (
-                "http://purl.imsglobal.org/vocab/lis/v2/course#CourseOffering"
-                in context_types
-            ),
-            "is_course_section": (
-                "http://purl.imsglobal.org/vocab/lis/v2/course#CourseSection"
-                in context_types
-            ),
-            "is_group": (
-                "http://purl.imsglobal.org/vocab/lis/v2/course#Group" in context_types
-            ),
+            "is_course_template": (ContextType.COURSE_TEMPLATE in context_types),
+            "is_course_offering": (ContextType.COURSE_OFFERING in context_types),
+            "is_course_section": (ContextType.COURSE_SECTION in context_types),
+            "is_group": (ContextType.GROUP in context_types),
         }
         if nrps_endpoint:
             defaults["memberships_url"] = nrps_endpoint
