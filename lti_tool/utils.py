@@ -153,18 +153,10 @@ def sync_context_from_launch(lti_launch: LtiLaunch) -> LtiContext:
         defaults = {
             "title": context_claim.get("title", ""),
             "label": context_claim.get("label", ""),
-            "is_course_template": (
-                ContextType.COURSE_TEMPLATE in context_types
-            ),
-            "is_course_offering": (
-                ContextType.COURSE_OFFERING in context_types
-            ),
-            "is_course_section": (
-                ContextType.COURSE_SECTION in context_types
-            ),
-            "is_group": (
-                ContextType.GROUP in context_types
-            ),
+            "is_course_template": (ContextType.COURSE_TEMPLATE in context_types),
+            "is_course_offering": (ContextType.COURSE_OFFERING in context_types),
+            "is_course_section": (ContextType.COURSE_SECTION in context_types),
+            "is_group": (ContextType.GROUP in context_types),
         }
         if nrps_endpoint:
             defaults["memberships_url"] = nrps_endpoint

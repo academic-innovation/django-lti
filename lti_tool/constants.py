@@ -33,7 +33,7 @@ class ContextType(str, Enum):
 
     @property
     def short_name(self) -> str:
-        """"Return the short name of this context."""
+        """Return the short name of this context."""
         return self.value[len(CONTEXT_TYPE_PATTERN.format("")) :]
 
     @property
