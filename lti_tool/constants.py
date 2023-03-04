@@ -8,7 +8,9 @@ SYSTEM_ROLE_PATTERN = "http://purl.imsglobal.org/vocab/lis/v2/system/person#{}"
 
 CONTEXT_TYPE_PATTERN = "http://purl.imsglobal.org/vocab/lis/v2/course#{}"
 
-INSTITUTION_TYPE_PATTERN = "http://purl.imsglobal.org/vocab/lis/v2/institution/person#{}"
+INSTITUTION_TYPE_PATTERN = (
+    "http://purl.imsglobal.org/vocab/lis/v2/institution/person#{}"
+)
 
 
 class ContextRole(str, Enum):
