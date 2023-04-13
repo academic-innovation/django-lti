@@ -1,6 +1,6 @@
 black==22.3.0
 django-stubs>=1.9.0,<1.12
-django<4.1
+django<5.0
 factory-boy==3.2.1
 flake8-bugbear==21.9.2
 flake8-django==1.1.1
