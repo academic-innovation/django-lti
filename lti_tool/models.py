@@ -13,6 +13,7 @@ from django.utils.translation import gettext_lazy as _
 from jwcrypto.jwk import JWK
 from pylti1p3.contrib.django.message_launch import DjangoMessageLaunch
 from pylti1p3.deep_link_resource import DeepLinkResource
+from pylti1p3.lineitem import LineItem
 from pylti1p3.registration import Registration
 
 from .constants import ContextRole
@@ -464,6 +465,55 @@ class LtiResourceLink(models.Model):
 
     def __str__(self):
         return self.title if self.title else self.id_on_platform
+
+
+class LtiLineItem(models.Model):
+    """Represents an LTI LineItem for assignment scoring.
+
+    The line item scope and methods are described in the LTI Assignment and Grade
+    Services 2.0 spec at
+    https://www.imsglobal.org/spec/lti-ags/v2p0#line-item-service-scope-and-allowed-http-methods
+    """
+
+    context = models.ForeignKey(
+        LtiContext,
+        related_name="line_items",
+        on_delete=models.CASCADE,
+        verbose_name=_("context"),
+    )
+    url = models.URLField(_("URL on Platform"))
+    maximum_score = models.FloatField(_("Maximum score"))
+    label = models.CharField(_("Label"), max_length=255)
+    tag = models.CharField(_("Tag"), max_length=255)
+    resource_id = models.CharField(_("Resource ID"), max_length=255)
+    resource_link = models.ForeignKey(
+        LtiResourceLink, on_delete=models.SET_NULL, null=True
+    )
+    start_datetime = models.DateTimeField(_("Start Date/Time"), null=True)
+    end_datetime = models.DateTimeField(_("End Date/Time"), null=True)
+
+    def __str__(self):
+        return self.label
+
+    def to_line_item(self) -> LineItem:
+        return LineItem(
+            {
+                "id": self.url,
+                "scoreMaximum": self.maximum_score,
+                "label": self.label,
+                "resourceId": self.resource_id,
+                "tag": self.tag,
+                "resourceLinkId": self.resource_link.id_on_platform
+                if self.resource_link
+                else None,
+                "startDateTime": self.start_datetime.isoformat()
+                if self.start_datetime
+                else "",
+                "endDateTime": self.end_datetime.isoformat()
+                if self.end_datetime
+                else "",
+            }
+        )
 
 
 class ViewportDimensions(NamedTuple):
