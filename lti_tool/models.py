@@ -13,7 +13,6 @@ from django.utils.translation import gettext_lazy as _
 from jwcrypto.jwk import JWK
 from pylti1p3.contrib.django.message_launch import DjangoMessageLaunch
 from pylti1p3.deep_link_resource import DeepLinkResource
-from pylti1p3.lineitem import LineItem
 from pylti1p3.registration import Registration
 
 from .constants import ContextRole
@@ -494,26 +493,6 @@ class LtiLineItem(models.Model):
 
     def __str__(self):
         return self.label
-
-    def to_line_item(self) -> LineItem:
-        return LineItem(
-            {
-                "id": self.url,
-                "scoreMaximum": self.maximum_score,
-                "label": self.label,
-                "resourceId": self.resource_id,
-                "tag": self.tag,
-                "resourceLinkId": self.resource_link.id_on_platform
-                if self.resource_link
-                else None,
-                "startDateTime": self.start_datetime.isoformat()
-                if self.start_datetime
-                else "",
-                "endDateTime": self.end_datetime.isoformat()
-                if self.end_datetime
-                else "",
-            }
-        )
 
 
 class ViewportDimensions(NamedTuple):
