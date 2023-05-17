@@ -483,8 +483,8 @@ class LtiLineItem(models.Model):
     url = models.URLField(_("URL on platform"), unique=True)
     maximum_score = models.FloatField(_("maximum score"))
     label = models.CharField(_("label"), max_length=255)
-    tag = models.CharField(_("tag"), max_length=255)
-    resource_id = models.CharField(_("resource ID"), max_length=255)
+    tag = models.CharField(_("tag"), max_length=255, blank=True)
+    resource_id = models.CharField(_("resource ID"), max_length=255, blank=True)
     resource_link = models.ForeignKey(
         LtiResourceLink, on_delete=models.SET_NULL, null=True
     )
