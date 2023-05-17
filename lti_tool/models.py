@@ -480,16 +480,16 @@ class LtiLineItem(models.Model):
         on_delete=models.CASCADE,
         verbose_name=_("context"),
     )
-    url = models.URLField(_("URL on Platform"))
-    maximum_score = models.FloatField(_("Maximum score"))
-    label = models.CharField(_("Label"), max_length=255)
-    tag = models.CharField(_("Tag"), max_length=255)
-    resource_id = models.CharField(_("Resource ID"), max_length=255)
+    url = models.URLField(_("URL on platform"))
+    maximum_score = models.FloatField(_("maximum score"))
+    label = models.CharField(_("label"), max_length=255)
+    tag = models.CharField(_("tag"), max_length=255)
+    resource_id = models.CharField(_("resource ID"), max_length=255)
     resource_link = models.ForeignKey(
         LtiResourceLink, on_delete=models.SET_NULL, null=True
     )
-    start_datetime = models.DateTimeField(_("Start Date/Time"), null=True)
-    end_datetime = models.DateTimeField(_("End Date/Time"), null=True)
+    start_datetime = models.DateTimeField(_("start date/time"), null=True)
+    end_datetime = models.DateTimeField(_("end date/time"), null=True)
 
     def __str__(self):
         return self.label
