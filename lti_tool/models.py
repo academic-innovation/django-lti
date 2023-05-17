@@ -480,7 +480,7 @@ class LtiLineItem(models.Model):
         on_delete=models.CASCADE,
         verbose_name=_("context"),
     )
-    url = models.URLField(_("URL on platform"))
+    url = models.URLField(_("URL on platform"), unique=True)
     maximum_score = models.FloatField(_("maximum score"))
     label = models.CharField(_("label"), max_length=255)
     tag = models.CharField(_("tag"), max_length=255)
