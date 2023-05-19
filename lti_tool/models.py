@@ -466,6 +466,35 @@ class LtiResourceLink(models.Model):
         return self.title if self.title else self.id_on_platform
 
 
+class LtiLineItem(models.Model):
+    """Represents an LTI LineItem for assignment scoring.
+
+    The line item scope and methods are described in the LTI Assignment and Grade
+    Services 2.0 spec at
+    https://www.imsglobal.org/spec/lti-ags/v2p0#line-item-service-scope-and-allowed-http-methods
+    """
+
+    context = models.ForeignKey(
+        LtiContext,
+        related_name="line_items",
+        on_delete=models.CASCADE,
+        verbose_name=_("context"),
+    )
+    url = models.URLField(_("URL on platform"), unique=True)
+    maximum_score = models.FloatField(_("maximum score"))
+    label = models.CharField(_("label"), max_length=255)
+    tag = models.CharField(_("tag"), max_length=255, blank=True)
+    resource_id = models.CharField(_("resource ID"), max_length=255, blank=True)
+    resource_link = models.ForeignKey(
+        LtiResourceLink, on_delete=models.SET_NULL, null=True
+    )
+    start_datetime = models.DateTimeField(_("start date/time"), null=True)
+    end_datetime = models.DateTimeField(_("end date/time"), null=True)
+
+    def __str__(self):
+        return self.label
+
+
 class ViewportDimensions(NamedTuple):
     width: int
     height: int
