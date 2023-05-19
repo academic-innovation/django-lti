@@ -1,5 +1,5 @@
 name: Packaging
-on: [push]
+on: [push, pull_request]
 jobs:
   build:
     runs-on: ubuntu-latest
@@ -7,7 +7,7 @@ jobs:
       - uses: actions/checkout@v2
       - uses: actions/setup-python@v2
         with:
-          python-version: '3.9'
+          python-version: "3.9"
       - run: python -m pip install build --user
       - run: python -m build --sdist --wheel --outdir dist/
       - uses: actions/upload-artifact@v3
@@ -20,7 +20,7 @@ jobs:
     steps:
       - uses: actions/setup-python@v2
         with:
-          python-version: '3.9'
+          python-version: "3.9"
       - uses: actions/download-artifact@v3
         with:
           name: package-build
@@ -39,7 +39,7 @@ jobs:
     steps:
       - uses: actions/setup-python@v2
         with:
-          python-version: '3.9'
+          python-version: "3.9"
       - uses: actions/download-artifact@v3
         with:
           name: package-build
