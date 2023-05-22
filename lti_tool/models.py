@@ -630,6 +630,7 @@ class LtiLaunch:
             user__registration__client_id=client_id,
             user__sub=sub,
             context__id_on_platform=context_id,
+            context__deployment=self.deployment,
         )
 
     @property

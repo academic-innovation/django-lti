@@ -1,5 +1,12 @@
 name: Run quality checks
-on: [push]
+on:
+  push:
+    branches:
+      - main
+  pull_request:
+concurrency:
+  group: ${{ github.head_ref || github.run_id }}
+  cancel-in-progress: true
 jobs:
   lint:
     runs-on: ubuntu-latest
@@ -7,7 +14,7 @@ jobs:
       - uses: actions/checkout@v2
       - uses: actions/setup-python@v2
         with:
-          python-version: '3.9'
+          python-version: "3.9"
       - run: pip install --user --upgrade nox
       - run: nox -s lint
   sort:
@@ -16,7 +23,7 @@ jobs:
       - uses: actions/checkout@v2
       - uses: actions/setup-python@v2
         with:
-          python-version: '3.9'
+          python-version: "3.9"
       - run: pip install --user --upgrade nox
       - run: nox -s sort
   format:
@@ -25,7 +32,7 @@ jobs:
       - uses: actions/checkout@v2
       - uses: actions/setup-python@v2
         with:
-          python-version: '3.9'
+          python-version: "3.9"
       - run: pip install --user --upgrade nox
       - run: nox -s format
   types:
@@ -34,24 +41,28 @@ jobs:
       - uses: actions/checkout@v2
       - uses: actions/setup-python@v2
         with:
-          python-version: '3.9'
+          python-version: "3.9"
       - run: pip install --user --upgrade nox
       - run: nox -s types
   test:
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-20.04 # Python 3.6 unavailable on ubuntu-22.04
     strategy:
       matrix:
-        python: ['3.6', '3.7', '3.8', '3.9', '3.10']
-        django: ['3.2.0', '4.0.0', '4.1.0']
+        python: ["3.6", "3.7", "3.8", "3.9", "3.10"]
+        django: ["3.2.0", "4.0.0", "4.1.0", "4.2.0"]
         exclude:
-          - python: '3.6'
-            django: '4.0.0'
-          - python: '3.6'
-            django: '4.1.0'
-          - python: '3.7'
-            django: '4.0.0'
-          - python: '3.7'
-            django: '4.1.0'
+          - python: "3.6"
+            django: "4.0.0"
+          - python: "3.6"
+            django: "4.1.0"
+          - python: "3.6"
+            django: "4.2.0"
+          - python: "3.7"
+            django: "4.0.0"
+          - python: "3.7"
+            django: "4.1.0"
+          - python: "3.7"
+            django: "4.2.0"
     steps:
       - uses: actions/checkout@v2
       - uses: actions/setup-python@v2
