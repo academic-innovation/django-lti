@@ -93,3 +93,10 @@ class InstitutionRole(str, Enum):
     def full_name(self) -> str:
         """Return the full name of this roles."""
         return self.value
+
+
+class AgsScope(str, Enum):
+    MANAGE_LINEITEMS = "https://purl.imsglobal.org/spec/lti-ags/scope/lineitem"
+    QUERY_LINEITEMS = "https://purl.imsglobal.org/spec/lti-ags/scope/lineitem.readonly"
+    PUBLISH_SCORES = "https://purl.imsglobal.org/spec/lti-ags/scope/score"
+    ACCESS_RESULTS = "https://purl.imsglobal.org/spec/lti-ags/scope/result.readonly"

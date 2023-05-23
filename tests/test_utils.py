@@ -104,6 +104,30 @@ class TestSyncContextFromLaunch:
         assert context.title == "A Context Title"
         assert context.is_course_offering
 
+    def test_sync_new_context_with_ags(self, monkeypatch):
+        context_claim = {"id": "a-context-id"}
+        ags_claim = {
+            "scope": [
+                "https://purl.imsglobal.org/spec/lti-ags/scope/lineitem",
+                "https://purl.imsglobal.org/spec/lti-ags/scope/result.readonly",
+                "https://purl.imsglobal.org/spec/lti-ags/scope/score",
+            ],
+            "lineitems": "https://www.example.com/2344/lineitems/",
+            "lineitem": "https://www.example.com/2344/lineitems/1234/lineitem",
+        }
+        deployment = factories.LtiDeploymentFactory()
+        monkeypatch.setattr(models.LtiLaunch, "context_claim", context_claim)
+        monkeypatch.setattr(models.LtiLaunch, "ags_claim", ags_claim)
+        monkeypatch.setattr(models.LtiLaunch, "deployment", deployment)
+        lti_launch = models.LtiLaunch(None)
+        context = utils.sync_context_from_launch(lti_launch)
+        assert context.id_on_platform == "a-context-id"
+        assert context.lineitems_url == "https://www.example.com/2344/lineitems/"
+        assert not context.can_query_lineitems
+        assert context.can_manage_lineitems
+        assert context.can_publish_scores
+        assert context.can_access_results
+
     def test_sync_existing_context(self, monkeypatch):
         deployment = factories.LtiDeploymentFactory()
         factories.LtiContextFactory(

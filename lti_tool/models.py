@@ -335,8 +335,13 @@ class LtiContext(models.Model):
     is_course_template = models.BooleanField(_("is course template"), default=False)
     is_course_offering = models.BooleanField(_("is course offering"), default=False)
     is_course_section = models.BooleanField(_("is course section"), default=False)
-    memberships_url = models.URLField(blank=True)
     is_group = models.BooleanField(_("is group"), default=False)
+    memberships_url = models.URLField(blank=True)
+    lineitems_url = models.URLField(_("lineitems URL"), blank=True)
+    can_query_lineitems = models.BooleanField(_("can query lineitems"), default=False)
+    can_manage_lineitems = models.BooleanField(_("can manage lineitems"), default=False)
+    can_publish_scores = models.BooleanField(_("can publish scores"), default=False)
+    can_access_results = models.BooleanField(_("can access results"), default=False)
     datetime_created = models.DateTimeField(_("created"), default=now, editable=False)
     datetime_modified = models.DateTimeField(_("modified"), auto_now=True)
 
@@ -461,6 +466,35 @@ class LtiResourceLink(models.Model):
         return self.title if self.title else self.id_on_platform
 
 
+class LtiLineItem(models.Model):
+    """Represents an LTI LineItem for assignment scoring.
+
+    The line item scope and methods are described in the LTI Assignment and Grade
+    Services 2.0 spec at
+    https://www.imsglobal.org/spec/lti-ags/v2p0#line-item-service-scope-and-allowed-http-methods
+    """
+
+    context = models.ForeignKey(
+        LtiContext,
+        related_name="line_items",
+        on_delete=models.CASCADE,
+        verbose_name=_("context"),
+    )
+    url = models.URLField(_("URL on platform"), unique=True)
+    maximum_score = models.FloatField(_("maximum score"))
+    label = models.CharField(_("label"), max_length=255)
+    tag = models.CharField(_("tag"), max_length=255, blank=True)
+    resource_id = models.CharField(_("resource ID"), max_length=255, blank=True)
+    resource_link = models.ForeignKey(
+        LtiResourceLink, on_delete=models.SET_NULL, null=True
+    )
+    start_datetime = models.DateTimeField(_("start date/time"), null=True)
+    end_datetime = models.DateTimeField(_("end date/time"), null=True)
+
+    def __str__(self):
+        return self.label
+
+
 class ViewportDimensions(NamedTuple):
     width: int
     height: int
@@ -565,6 +599,10 @@ class LtiLaunch:
         return self.get_claim(
             "https://purl.imsglobal.org/spec/lti-nrps/claim/namesroleservice"
         )
+
+    @property
+    def ags_claim(self):
+        return self.get_claim("https://purl.imsglobal.org/spec/lti-ags/claim/endpoint")
 
     @property
     def context_claim(self):
