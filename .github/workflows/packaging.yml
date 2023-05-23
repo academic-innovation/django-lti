@@ -4,8 +4,10 @@ on:
     branches:
       - main
   pull_request:
+  release:
+    types: [published]
 concurrency:
-  group: ${{ github.head_ref || github.run_id }}
+  group: ${{ github.workflow }}-${{ github.head_ref || github.run_id }}
   cancel-in-progress: true
 jobs:
   build:
@@ -40,7 +42,7 @@ jobs:
           skip_existing: true
           verbose: true
   publish:
-    if: github.event_name == 'push' && startsWith(github.ref, 'refs/tags')
+    if: github.event_name == 'release'
     needs: build
     runs-on: ubuntu-latest
     steps:
