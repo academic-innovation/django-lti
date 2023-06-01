@@ -67,6 +67,8 @@ class LtiLaunchBaseView(View):
         request.session.clear()
         lti_launch = get_launch_from_request(request)
         sync_data_from_launch(lti_launch)
+        if not lti_launch.deployment.is_active:
+            return self.handle_inactive_deployment(request, lti_launch)
         request.session[SESSION_KEY] = lti_launch.get_launch_id()
         request.lti_launch = lti_launch
         if request.lti_launch.is_resource_launch:
@@ -77,6 +79,16 @@ class LtiLaunchBaseView(View):
             return self.handle_submission_review_launch(request, lti_launch)
         if request.lti_launch.is_data_privacy_launch:
             return self.handle_data_privacy_launch(request, lti_launch)
+
+    def handle_inactive_deployment(
+        self, request: HttpRequest, lti_launch: LtiLaunch
+    ) -> HttpResponse:
+        """Handles LTI launches with inactive deployments."""
+        error_msg = _("This deployment is not active.")
+        return_url = lti_launch.get_return_url(lti_errormsg=error_msg)
+        if return_url is None:
+            return HttpResponseForbidden(error_msg)
+        return HttpResponseRedirect(return_url)
 
     def handle_resource_launch(
         self, request: HttpRequest, lti_launch: LtiLaunch
