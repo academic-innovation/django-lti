@@ -67,6 +67,7 @@ class LtiLaunchBaseView(View):
         request.session.clear()
         lti_launch = get_launch_from_request(request)
         sync_data_from_launch(lti_launch)
+        self.launch_setup(request, lti_launch)
         if not lti_launch.deployment.is_active:
             return self.handle_inactive_deployment(request, lti_launch)
         request.session[SESSION_KEY] = lti_launch.get_launch_id()
@@ -79,6 +80,9 @@ class LtiLaunchBaseView(View):
             return self.handle_submission_review_launch(request, lti_launch)
         if request.lti_launch.is_data_privacy_launch:
             return self.handle_data_privacy_launch(request, lti_launch)
+
+    def launch_setup(self, request: HttpRequest, lti_launch: LtiLaunch) -> None:
+        pass
 
     def handle_inactive_deployment(
         self, request: HttpRequest, lti_launch: LtiLaunch
