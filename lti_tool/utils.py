@@ -67,15 +67,17 @@ class DjangoToolConfig(ToolConfAbstract):
 
     def find_deployment(self, iss, deployment_id):
         try:
-            self.deployment = LtiDeployment.objects.active().get(
+            self.deployment = LtiDeployment.objects.get(
                 registration__uuid=self.registration_uuid,
                 registration__issuer=iss,
                 registration__is_active=True,
                 deployment_id=deployment_id,
             )
-            return _prepare_deployment(self.deployment)
         except LtiDeployment.DoesNotExist:
-            return None
+            self.deployment = LtiDeployment.objects.create(
+                registration=self.registration, deployment_id=deployment_id
+            )
+        return _prepare_deployment(self.deployment)
 
     def find_deployment_by_params(self, iss, deployment_id, client_id, *args, **kwargs):
         lookups = {
@@ -87,10 +89,12 @@ class DjangoToolConfig(ToolConfAbstract):
         if self.registration_uuid is not None:
             lookups.update(registration__uuid=self.registration_uuid)
         try:
-            self.deployment = LtiDeployment.objects.active().get(**lookups)
-            return _prepare_deployment(self.deployment)
+            self.deployment = LtiDeployment.objects.get(**lookups)
         except LtiDeployment.DoesNotExist:
-            return None
+            self.deployment = LtiDeployment.objects.create(
+                registration=self.registration, deployment_id=deployment_id
+            )
+        return _prepare_deployment(self.deployment)
 
 
 def normalize_role(role: str) -> str:
