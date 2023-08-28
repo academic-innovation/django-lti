@@ -307,3 +307,50 @@ class TestSyncPlatformInstanceFromLaunch:
         assert updated_platform_instance.product_family_code == "example"
         assert updated_platform_instance.version == "1.0"
         assert updated_platform_instance.deployments.first() == deployment
+
+
+@pytest.mark.django_db
+class TestDjangoToolConfig:
+    """Tests for utils.DjangoToolConfig."""
+
+    @pytest.mark.parametrize("is_known_deployment", (True, False))
+    def test_find_deployment(self, is_known_deployment):
+        models.Key.objects.generate()
+        registration = factories.LtiRegistrationFactory()
+        deployment_id = "a-deployment"
+        if is_known_deployment:
+            factories.LtiDeploymentFactory(
+                registration=registration, deployment_id=deployment_id, is_active=True
+            )
+
+        tool_config = utils.DjangoToolConfig(registration_uuid=registration.uuid)
+        tool_config.find_registration_by_issuer(registration.issuer)
+        deployment = tool_config.find_deployment(registration.issuer, deployment_id)
+
+        assert deployment.get_deployment_id() == deployment_id
+        assert tool_config.deployment.deployment_id == deployment_id
+        assert tool_config.deployment.is_active == is_known_deployment
+        assert models.LtiDeployment.objects.count() == 1
+
+    @pytest.mark.parametrize("is_known_deployment", (True, False))
+    def test_find_deployment_by_params(self, is_known_deployment):
+        models.Key.objects.generate()
+        registration = factories.LtiRegistrationFactory()
+        deployment_id = "a-deployment"
+        if is_known_deployment:
+            factories.LtiDeploymentFactory(
+                registration=registration, deployment_id=deployment_id, is_active=True
+            )
+
+        tool_config = utils.DjangoToolConfig()
+        tool_config.find_registration_by_params(
+            registration.issuer, registration.client_id
+        )
+        deployment = tool_config.find_deployment_by_params(
+            registration.issuer, deployment_id, registration.client_id
+        )
+
+        assert deployment.get_deployment_id() == deployment_id
+        assert tool_config.deployment.deployment_id == deployment_id
+        assert tool_config.deployment.is_active == is_known_deployment
+        assert models.LtiDeployment.objects.count() == 1

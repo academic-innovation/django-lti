@@ -36,6 +36,38 @@ Each application will handle a launch differently, but common tasks include:
 - Starting an asynchronous task to fetch course members from the platform
 - Redirecting to an appropriate page based on launch data
 
+Handling Deployments
+--------------------
+
+By default, :class:`~lti_tool.views.LtiLaunchBaseView` will return an error if the
+:class:`~lti_tool.models.LtiDeployment` associated with the launch is inactive. In this
+case, a tool administrator will need to manually activate each new deployment using the
+Django admin or a custom built interface.
+
+To implement custom behavior for handling inactive deployments, tools may
+override the :meth:`~lti_tool.views.LtiLaunchBaseView.handle_inactive_deployment`
+method and return a custom response.
+
+.. code-block:: python
+
+    class ApplicationLaunchView(LtiLaunchBaseView):
+
+        def handle_inactive_deployment(self, request, lti_launch):
+            return HttpResponseRedirect(custom_deployment_activation_url)
+
+Tools wishing to automatically activate new deployments (either universally, or based
+on specific criteria) may do so by implementing the
+:meth:`~lti_tool.views.LtiLaunchBaseView.launch_setup` method.
+
+.. code-block:: python
+
+    class ApplicationLaunchView(LtiLaunchBaseView):
+
+        def launch_setup(self, request, lti_launch):
+            if not lti_launch.deployment.is_active:
+                lti_launch.deployment.is_active = True
+                lti_launch.deployment.save()
+
 Other Launch Messages
 ---------------------
 
