@@ -106,7 +106,7 @@ class LtiRegistrationQuerySet(models.QuerySet):
 
 
 class LtiRegistration(models.Model):
-    """A LTI platform registration.
+    """An LTI platform registration.
 
     Attributes:
         name (str): A display name for this registration
@@ -501,7 +501,7 @@ class ViewportDimensions(NamedTuple):
 
 
 class LtiLaunch:
-    """A LTI launch."""
+    """An LTI launch."""
 
     _lti1p3_message_launch: Optional[DjangoMessageLaunch] = None
     _lti1p3_launch_id: Optional[str] = None
@@ -573,11 +573,13 @@ class LtiLaunch:
 
     @cached_property
     def registration(self) -> LtiRegistration:
+        """The LTI platform registration associated with this launch."""
         tool_conf = self.get_message_launch().get_tool_conf()
         return tool_conf.registration
 
     @cached_property
     def deployment(self) -> LtiDeployment:
+        """The LTI deployment associated with this launch."""
         tool_conf = self.get_message_launch()._tool_config
         if tool_conf.deployment is not None:
             return tool_conf.deployment
@@ -590,6 +592,7 @@ class LtiLaunch:
 
     @cached_property
     def user(self) -> LtiUser:
+        """The LTI user associated with the launch."""
         return LtiUser.objects.get(
             registration=self.registration, sub=self.get_claim("sub")
         )
@@ -610,6 +613,7 @@ class LtiLaunch:
 
     @cached_property
     def context(self) -> LtiContext:
+        """The LTI context associated with the launch."""
         context_id = self.context_claim["id"] if self.context_claim is not None else ""
         return LtiContext.objects.get(
             deployment=self.deployment, id_on_platform=context_id
@@ -621,6 +625,7 @@ class LtiLaunch:
 
     @cached_property
     def membership(self) -> LtiMembership:
+        """The LTI membership associated with the launch."""
         issuer = self.get_claim("iss")
         client_id = self.get_claim("aud")
         sub = self.get_claim("sub")
@@ -639,6 +644,7 @@ class LtiLaunch:
 
     @cached_property
     def resource_link(self) -> LtiResourceLink:
+        """The LTI resource link associated with the launch."""
         context_id = self.context_claim["id"] if self.context_claim is not None else ""
         return LtiResourceLink.objects.get(
             context__deployment=self.deployment,
@@ -652,6 +658,7 @@ class LtiLaunch:
 
     @cached_property
     def platform_instance(self) -> Optional[LtiPlatformInstance]:
+        """The LTI platform instance associated with the launch, if present."""
         if self.platform_instance_claim is None:
             return None
         return LtiPlatformInstance.objects.get(
