@@ -18,6 +18,7 @@ top of `pylti1p3`_ to ease the process of adding robust LTI support to Django pr
    key_management
    oidc_initiation
    launch_handling
+   reference
 
 
 .. _Django reusable app: https://docs.djangoproject.com/en/4.0/intro/reusable-apps/

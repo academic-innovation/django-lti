@@ -5,8 +5,10 @@
 
 import os.path
 import sys
+from functools import cached_property
 
 import django.conf
+import django.utils.functional
 
 # -- Path setup --------------------------------------------------------------
 
@@ -16,6 +18,11 @@ import django.conf
 sys.path.insert(0, os.path.abspath(".."))
 
 # -- Django setup ------------------------------------------------------------
+
+# Sphinx autodoc doesn't recognize functions decorated with @cached_property from
+# django.utils.functional as properties, so we swap it here with the one from functools.
+# See https://code.djangoproject.com/ticket/30949
+django.utils.functional.cached_property = cached_property
 
 django.conf.settings.configure(
     INSTALLED_APPS=["django.contrib.auth", "django.contrib.contenttypes", "lti_tool"],

@@ -28,7 +28,7 @@ def jwks(request):
 
 @method_decorator(csrf_exempt, name="dispatch")
 class OIDCLoginInitView(View):
-    """Handles OICD 3rd-party login initiation for a LTI launch."""
+    """Handles OIDC 3rd-party login initiation for an LTI launch."""
 
     def get(self, request, *args, **kwargs):
         registration_uuid = kwargs.get("registration_uuid")
@@ -97,7 +97,7 @@ class LtiLaunchBaseView(View):
     def handle_resource_launch(
         self, request: HttpRequest, lti_launch: LtiLaunch
     ) -> HttpResponse:
-        """Handles a LTI resource launch.
+        """Handles an LTI resource launch.
 
         Implement this method to handle LTI resource link launch requests,
         as described in the LTI 1.3 core spec at
