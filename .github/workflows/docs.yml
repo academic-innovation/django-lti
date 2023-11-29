@@ -34,4 +34,4 @@ jobs:
     steps:
       - uses: actions/configure-pages@v2
       - id: deployment
-        uses: actions/deploy-pages@v1
+        uses: actions/deploy-pages@v2
