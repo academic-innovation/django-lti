@@ -49,7 +49,12 @@ jobs:
     strategy:
       matrix:
         python: ["3.8", "3.9", "3.10", "3.11", "3.12"]
-        django: ["3.2.0", "4.0.0", "4.1.0", "4.2.0"]
+        django: ["3.2.0", "4.0.0", "4.1.0", "4.2.0", "5.0.0"]
+        exclude:
+          - django: "5.0.0"
+            python: "3.8"
+          - django: "5.0.0"
+            python: "3.9"
     steps:
       - uses: actions/checkout@v4
       - uses: actions/setup-python@v4

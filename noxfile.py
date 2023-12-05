@@ -35,7 +35,8 @@ def types(session):
     [
         (python, django)
         for python in ("3.8", "3.9", "3.10", "3.11", "3.12")
-        for django in ("3.2.0", "4.0.0", "4.1.0", "4.2.0")
+        for django in ("3.2.0", "4.0.0", "4.1.0", "4.2.0", "5.0.0")
+        if (python, django) not in [("3.8", "5.0.0"), ("3.9", "5.0.0")]
     ],
 )
 def test(session, django):
