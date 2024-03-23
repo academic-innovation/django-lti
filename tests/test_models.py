@@ -180,3 +180,25 @@ class TestLtiLaunch:
         monkeypatch.setattr(models.LtiLaunch, "deployment", new_deployment)
         lti_launch = models.LtiLaunch(None)
         assert lti_launch.membership == new_membership
+
+    def test_membership_with_aud_array(self, monkeypatch):
+        membership = factories.LtiMembershipFactory()
+        deployment = membership.context.deployment
+        registration = deployment.registration
+        launch_data = {
+            "iss": registration.issuer,
+            "aud": [registration.client_id],
+            "sub": membership.user.sub,
+            "https://purl.imsglobal.org/spec/lti/claim/deployment_id": (
+                deployment.deployment_id
+            ),
+            "https://purl.imsglobal.org/spec/lti/claim/context": {
+                "id": membership.context.id_on_platform,
+            },
+        }
+        monkeypatch.setattr(
+            models.LtiLaunch, "get_launch_data", lambda self: launch_data
+        )
+        monkeypatch.setattr(models.LtiLaunch, "deployment", deployment)
+        lti_launch = models.LtiLaunch(None)
+        assert lti_launch.membership == membership
