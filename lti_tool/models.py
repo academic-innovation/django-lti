@@ -627,7 +627,8 @@ class LtiLaunch:
     def membership(self) -> LtiMembership:
         """The LTI membership associated with the launch."""
         issuer = self.get_claim("iss")
-        client_id = self.get_claim("aud")
+        aud = self.get_claim("aud")
+        client_id = aud[0] if isinstance(aud, list) else aud
         sub = self.get_claim("sub")
         context_id = self.context_claim["id"] if self.context_claim is not None else ""
         return LtiMembership.objects.get(
