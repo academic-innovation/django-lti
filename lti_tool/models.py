@@ -11,8 +11,8 @@ from django.utils.timezone import now
 from django.utils.translation import gettext_lazy as _
 
 from jwcrypto.jwk import JWK
-from pylti1p3.contrib.django.message_launch import DjangoMessageLaunch
 from pylti1p3.deep_link_resource import DeepLinkResource
+from pylti1p3.message_launch import MessageLaunch
 from pylti1p3.registration import Registration
 
 from .constants import ContextRole
@@ -503,10 +503,10 @@ class ViewportDimensions(NamedTuple):
 class LtiLaunch:
     """An LTI launch."""
 
-    _lti1p3_message_launch: Optional[DjangoMessageLaunch] = None
+    _lti1p3_message_launch: Optional[MessageLaunch] = None
     _lti1p3_launch_id: Optional[str] = None
 
-    def __init__(self, message_launch: DjangoMessageLaunch) -> None:
+    def __init__(self, message_launch: MessageLaunch) -> None:
         launch_id = None
         if message_launch is not None:
             launch_id = message_launch.get_launch_id()
