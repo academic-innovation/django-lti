@@ -24,6 +24,9 @@ jobs:
           name: package-build
           path: dist/
   test-publish:
+    # Disable test-publish job
+    # See https://github.com/academic-innovation/django-lti/issues/101
+    if: false
     needs: build
     runs-on: ubuntu-latest
     steps:
