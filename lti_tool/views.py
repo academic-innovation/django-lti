@@ -31,6 +31,10 @@ def jwks(request):
 @method_decorator(csrf_exempt, name="dispatch")
 class OIDCLoginInitView(View):
     """Handles OIDC 3rd-party login initiation for an LTI launch."""
+
+    """
+    Message strings used by `DjangoOIDCLogin.enable_check_cookies()`.
+    """
     main_msg: Optional[str] = None
     click_msg: Optional[str] = None
     loading_msg: Optional[str] = None
