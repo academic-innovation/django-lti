@@ -1,5 +1,3 @@
-from typing import Optional
-
 from django.http import (
     HttpRequest,
     HttpResponse,
@@ -35,9 +33,12 @@ class OIDCLoginInitView(View):
     """
     Message strings used by `DjangoOIDCLogin.enable_check_cookies()`.
     """
-    main_msg: Optional[str] = None
-    click_msg: Optional[str] = None
-    loading_msg: Optional[str] = None
+    main_msg: str = (
+        "Your browser prevents embedded content from using cookies.  To work "
+        "around this, the content must be opened in a new tab or window.  "
+    )
+    click_msg: str = "Open a new tab or window now."
+    loading_msg: str = "Loading..."
 
     def get(self, request, *args, **kwargs):
         registration_uuid = kwargs.get("registration_uuid")
