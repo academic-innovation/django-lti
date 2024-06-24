@@ -1,3 +1,5 @@
+from typing import Optional
+
 from django.http import (
     HttpRequest,
     HttpResponse,
@@ -29,6 +31,9 @@ def jwks(request):
 @method_decorator(csrf_exempt, name="dispatch")
 class OIDCLoginInitView(View):
     """Handles OIDC 3rd-party login initiation for an LTI launch."""
+    main_msg: Optional[str] = None
+    click_msg: Optional[str] = None
+    loading_msg: Optional[str] = None
 
     def get(self, request, *args, **kwargs):
         registration_uuid = kwargs.get("registration_uuid")
@@ -52,7 +57,9 @@ class OIDCLoginInitView(View):
         if target_link_uri is None:
             return HttpResponseBadRequest("Missing target_link_uri parameter.")
         redirect_url = self.get_redirect_url(target_link_uri)
-        return oidc_login.enable_check_cookies().redirect(redirect_url)
+        return oidc_login.enable_check_cookies(
+            self.main_msg, self.click_msg, self.loading_msg
+        ).redirect(redirect_url)
 
 
 @method_decorator(csrf_exempt, name="dispatch")
