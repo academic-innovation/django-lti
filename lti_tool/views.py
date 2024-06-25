@@ -30,6 +30,13 @@ def jwks(request):
 class OIDCLoginInitView(View):
     """Handles OIDC 3rd-party login initiation for an LTI launch."""
 
+    main_msg = (
+        "Your browser prevents embedded content from using cookies.  To work "
+        "around this, the content must be opened in a new tab or window.  "
+    )
+    click_msg = "Open a new tab or window now."
+    loading_msg = "Loading..."
+
     def get(self, request, *args, **kwargs):
         registration_uuid = kwargs.get("registration_uuid")
         return self.get_oidc_response(request, registration_uuid, request.GET)
@@ -52,7 +59,9 @@ class OIDCLoginInitView(View):
         if target_link_uri is None:
             return HttpResponseBadRequest("Missing target_link_uri parameter.")
         redirect_url = self.get_redirect_url(target_link_uri)
-        return oidc_login.enable_check_cookies().redirect(redirect_url)
+        return oidc_login.enable_check_cookies(
+            self.main_msg, self.click_msg, self.loading_msg
+        ).redirect(redirect_url)
 
 
 @method_decorator(csrf_exempt, name="dispatch")

@@ -16,18 +16,51 @@ to return an authentication request to the platform
 
 .. code-block:: python
 
-    ...
-
+    # ...
     from lti_tool.views import OIDCLoginInitView
 
     urlpatterns = [
         path("init/<uuid:registration_uuid/", OIDCLoginInitView.as_view(), name="init"),
-        ...
+        # ...
     ]
 
 The ``registration_uuid`` parameter is a reference to the
 :attr:`LtiRegistration.uuid <lti_tool.models.LtiRegistration.uuid>` property, and is
 used to identify the platform registration associated with the initiation request.
+
+
+Customizing language for blocked cookies
+----------------------------------------
+
+When the user's browser prevents embedded content from setting cookies within an
+``iframe``, the module displays a message about it and a link to open the
+content in a new tab or window.  The language of the message and link may be
+customized using optional message arguments to ``OIDCLoginInitView.as_view()``…
+
+.. code-block:: python
+
+    # ...
+    from lti_tool.views import OIDCLoginInitView
+
+    urlpatterns = [
+        path("init/<uuid:registration_uuid/", OIDCLoginInitView.as_view(
+            main_msg=(
+                "Your browser prevents embedded content from using cookies.  To work "
+                "around this, the content must be opened in a new tab or window.  "
+            ),
+            click_msg="Open a new tab or window now.",
+            loading_msg="Loading..."
+        ), name="init"),
+        # ...
+    ]
+
+The ``main_msg``, ``click_msg``, and ``loading_msg`` **optional** arguments are
+passed to ``DjangoOIDCLogin.enable_check_cookies()`` to generate messages shown
+in the UI.  The values shown here are the default values used by
+``OIDCLoginInitView``.  If cookies are not allowed by the browser, the value of
+``main_msg`` will be shown.  That will be followed by a link with label
+containing the value of ``click_msg``, which opens the content in a new tab or
+window.
 
 Customizing the authentication request
 --------------------------------------
