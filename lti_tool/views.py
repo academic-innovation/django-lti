@@ -30,15 +30,12 @@ def jwks(request):
 class OIDCLoginInitView(View):
     """Handles OIDC 3rd-party login initiation for an LTI launch."""
 
-    """
-    Message strings used by `DjangoOIDCLogin.enable_check_cookies()`.
-    """
-    main_msg: str = (
+    main_msg = (
         "Your browser prevents embedded content from using cookies.  To work "
         "around this, the content must be opened in a new tab or window.  "
     )
-    click_msg: str = "Open a new tab or window now."
-    loading_msg: str = "Loading..."
+    click_msg = "Open a new tab or window now."
+    loading_msg = "Loading..."
 
     def get(self, request, *args, **kwargs):
         registration_uuid = kwargs.get("registration_uuid")
