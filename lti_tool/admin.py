@@ -19,6 +19,7 @@ class LtiRegistrationAdmin(admin.ModelAdmin):
                     "uuid",
                     "issuer",
                     "client_id",
+                    "audience",
                     "auth_url",
                     "token_url",
                     "keyset_url",
