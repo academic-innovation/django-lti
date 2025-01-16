@@ -117,9 +117,9 @@ class LtiRegistration(models.Model):
         token_url (str): The platform's access token retrieval URL.
         keyset_url (str): The platform's JWKS URL.
         is_active (bool): Indicates if the registration is active within the tool.
-        public_key (str): Public key data specifc to this registration. Only to be used
+        public_key (str): Public key data specific to this registration. Only to be used
             when the platform cannot retrieve keys from a tool's JWKS URL.
-        private_key (str): Private key data specifc to this registration. Only to be
+        private_key (str): Private key data specific to this registration. Only to be
             used when the platform cannot retrieve keys from a tool's JWKS URL.
         datetime_created (datetime): When the registration was created.
         datetime_modified (datetime): When the registration was last modified.
