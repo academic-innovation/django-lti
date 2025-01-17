@@ -113,6 +113,7 @@ class LtiRegistration(models.Model):
         uuid (uuid4): A unique identifier for registraitons for use in OIDC login init.
         issuer (str): The platform's issuer.
         client_id (str): The client ID assigned to the tool by the platform.
+        audience (str): The platforms's OAuth2 audience.
         auth_url (str): The platform's auth login URL.
         token_url (str): The platform's access token retrieval URL.
         keyset_url (str): The platform's JWKS URL.
@@ -129,6 +130,7 @@ class LtiRegistration(models.Model):
     uuid = models.UUIDField(_("UUID"), default=uuid4)
     issuer = models.CharField(_("issuer"), max_length=255)
     client_id = models.CharField(_("client ID"), max_length=255)
+    audience = models.CharField(_("audience"), max_length=255, blank=True)
     auth_url = models.URLField(_("auth URL"))
     token_url = models.URLField(_("access token URL"))
     keyset_url = models.URLField(_("keyset URL"))
@@ -161,11 +163,12 @@ class LtiRegistration(models.Model):
         reg = Registration()
         reg.set_auth_login_url(self.auth_url)
         reg.set_auth_token_url(self.token_url)
-        # reg.set_auth_audience(auth_audience)
         reg.set_client_id(self.client_id)
         # reg.set_key_set(key_set)
         reg.set_key_set_url(self.keyset_url)
         reg.set_issuer(self.issuer)
+        if self.audience:
+            reg.set_auth_audience(self.audience)
         if self.has_key:
             reg.set_tool_public_key(self.public_key)
             reg.set_tool_private_key(self.private_key)
