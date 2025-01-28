@@ -36,7 +36,7 @@ django.setup()
 project = "django-lti"
 copyright = "2024, Center for Academic Innovation"
 author = "Center for Academic Innovation"
-release = "0.7.0"
+release = "0.7.1"
 
 # -- General configuration ---------------------------------------------------
 # https://www.sphinx-doc.org/en/master/usage/configuration.html#general-configuration
