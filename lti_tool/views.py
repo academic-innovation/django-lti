@@ -9,6 +9,7 @@ from django.http.response import HttpResponseRedirect
 from django.utils.decorators import method_decorator
 from django.utils.translation import gettext as _
 from django.views import View
+from django.views.decorators.clickjacking import xframe_options_exempt
 from django.views.decorators.csrf import csrf_exempt
 
 from pylti1p3.contrib.django import DjangoCacheDataStorage, DjangoOIDCLogin
@@ -26,7 +27,7 @@ def jwks(request):
     return JsonResponse(Key.objects.as_jwks())
 
 
-@method_decorator(csrf_exempt, name="dispatch")
+@method_decorator((csrf_exempt, xframe_options_exempt), name="dispatch")
 class OIDCLoginInitView(View):
     """Handles OIDC 3rd-party login initiation for an LTI launch."""
 
