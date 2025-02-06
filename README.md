@@ -48,11 +48,12 @@ To allow LTI platforms to retrieve a JWKS and initiate a launch, add paths for
 ```python
 ...
 
-from lti_tool.views import jwks, OIDCLoginInitView
+from lti_tool.views import jwks, OIDCLoginInitView, LtiConfigView
 
 urlpatterns = [
     path(".well-known/jwks.json", jwks, name="jwks"),
     path("init/<uuid:registration_uuid>/", OIDCLoginInitView.as_view(), name="init"),
+    path("<uuid:registration_uuid>/config.json", LtiConfigView.as_view()),
 ]
 
 ```

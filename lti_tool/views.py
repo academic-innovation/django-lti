@@ -1,3 +1,4 @@
+from django.conf import settings
 from django.http import (
     HttpRequest,
     HttpResponse,
@@ -6,10 +7,12 @@ from django.http import (
     JsonResponse,
 )
 from django.http.response import HttpResponseRedirect
+from django.urls import reverse
 from django.utils.decorators import method_decorator
 from django.utils.translation import gettext as _
 from django.views import View
 from django.views.decorators.csrf import csrf_exempt
+from urllib.parse import urljoin
 
 from pylti1p3.contrib.django import DjangoCacheDataStorage, DjangoOIDCLogin
 
@@ -140,3 +143,64 @@ class LtiLaunchBaseView(View):
         if return_url is None:
             return HttpResponseForbidden(error_msg)
         return HttpResponseRedirect(return_url)
+
+
+class LtiConfigView(View):
+    """
+    JSON configuration endpoint for LTI 1.3.
+
+    In Canvas LMS, an LTI Developer Key can be created via Manual
+    Entry, or by URL. This view provides the JSON necessary for URL
+    configuration in Canvas.
+
+    https://canvas.instructure.com/doc/api/file.lti_dev_key_config.html
+    """
+    @staticmethod
+    def get_config_json(domain: str, uuid: str) -> dict:
+        oidc_init_uri = urljoin(
+            "https://{}".format(domain),
+            reverse("init", kwargs={"registration_uuid": uuid}))
+
+        title = ""
+        description = ""
+        if hasattr(settings, "LTI_TOOL_CONFIGURATION"):
+            if settings.LTI_TOOL_CONFIGURATION["title"]:
+                title = settings.LTI_TOOL_CONFIGURATION["title"]
+
+            if settings.LTI_TOOL_CONFIGURATION["description"]:
+                description = settings.LTI_TOOL_CONFIGURATION["description"]
+
+        return {
+            "title": title,
+            "description": description,
+            "oidc_initiation_url": oidc_init_uri,
+            "scopes": [
+                "https://purl.imsglobal.org/spec/lti-ags/scope/lineitem",
+                "https://purl.imsglobal.org/spec/lti-ags/scope/result.readonly"
+            ],
+            "public_jwk_url": urljoin(
+                "https://{}".format(domain), reverse("jwks")),
+        }
+
+    def config_hook(self, config: dict) -> dict:
+        """
+        Override this method at the application level to customize the
+        configuration object. At the very least, `target_link_uri`
+        must be added to the config dictionary.
+
+        You can configure placements for the LTI application within
+        the LMS tool via options in the returned dictionary.
+
+        See reference documentation:
+        https://canvas.instructure.com/doc/api/file.lti_dev_key_config.html
+        """
+        return config
+
+    def get(self, request: HttpRequest, *args, **kwargs) -> JsonResponse:
+        domain = request.get_host()
+        registration_uuid = kwargs.get("registration_uuid")
+        config_obj = LtiConfigView.get_config_json(domain, registration_uuid)
+
+        config_obj = self.config_hook(config_obj)
+
+        return JsonResponse(config_obj)
