@@ -10,8 +10,8 @@ from lti_tool.auth.backends import LtiLaunchAuthenticationBackend
 class LtiLaunchAuthenticationMiddleware:
     """Middleware for utilizing LMS-provided authentication via LTI launch.
 
-    This middleware works in conjunction with `LtiLaunchMiddleware`.  The `LtiLaunchMiddleware`
-    MUST appear before this middleware in the middleware list.
+    This middleware works in conjunction with `LtiLaunchMiddleware`.  The
+    `LtiLaunchMiddleware` MUST appear before this middleware in the middleware list.
 
     If request.user is not authenticated, then this middleware attempts to
     authenticate the username from ``request.lti_launch.user.sub``.
@@ -122,9 +122,8 @@ class LtiLaunchAuthenticationMiddleware:
         return await self.get_response(request)
 
     def clean_username(self, username, request):
-        """Allow the backend to clean the username, if the backend defines a
-        clean_username method.
-        """
+        # Allow the backend to clean the username, if the backend defines a
+        # clean_username method.
         backend_str = request.session[auth.BACKEND_SESSION_KEY]
         backend = auth.load_backend(backend_str)
         try:
@@ -134,9 +133,9 @@ class LtiLaunchAuthenticationMiddleware:
         return username
 
     def _remove_invalid_user(self, request):
-        """Remove the current authenticated user in the request which is invalid
-        but only if the user is authenticated via the LtiLaunchAuthenticationBackend.
-        """
+        # Remove the current authenticated user in the request which is invalid
+        # but only if the user is authenticated via the LtiLaunchAuthenticationBackend.
+
         try:
             stored_backend = load_backend(
                 request.session.get(auth.BACKEND_SESSION_KEY, "")
@@ -149,9 +148,8 @@ class LtiLaunchAuthenticationMiddleware:
                 auth.logout(request)
 
     async def _aremove_invalid_user(self, request):
-        """Remove the current authenticated user in the request which is invalid
-        but only if the user is authenticated via the LtiLaunchAuthenticationBackend.
-        """
+        # Remove the current authenticated user in the request which is invalid
+        # but only if the user is authenticated via the LtiLaunchAuthenticationBackend.
         try:
             stored_backend = load_backend(
                 await request.session.aget(auth.BACKEND_SESSION_KEY, "")

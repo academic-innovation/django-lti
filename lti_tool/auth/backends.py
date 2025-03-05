@@ -9,9 +9,12 @@ UserModel = get_user_model()
 
 
 class LtiLaunchAuthenticationBackend(ModelBackend):
-    """This backend is to be used in conjunction with the ``LtiLaunchAuthenticationMiddleware``
-    found in the middleware module of this package, and is used when authentication is
-    is handled by an LMS and passed in via LTI launch.
+    """A Django authentication backend class for LTI launch authentication.
+
+    This backend is to be used in conjunction with the
+    ``LtiLaunchAuthenticationMiddleware`` found in the middleware module of
+    this package, and is used when authentication is is handled by an LMS and
+    passed in via LTI launch.
 
     By default, the ``authenticate`` method creates ``User`` objects for
     usernames that don't already exist in the database.  Subclasses can disable
@@ -23,7 +26,9 @@ class LtiLaunchAuthenticationBackend(ModelBackend):
     create_unknown_user = True
 
     def authenticate(self, request, lti_launch_user_id):
-        """The username passed as ``lti_launch_user_id`` is considered trusted. Return
+        """Authenticate the user based on the LTI launch.
+
+        The username passed as ``lti_launch_user_id`` is considered trusted. Return
         the ``User`` object with the given username. Create a new ``User``
         object if ``create_unknown_user`` is ``True``.
 
@@ -75,7 +80,9 @@ class LtiLaunchAuthenticationBackend(ModelBackend):
         return user if self.user_can_authenticate(user) else None
 
     def clean_username(self, username):
-        """Perform any cleaning on the "username" prior to using it to get or
+        """Clean the username.
+
+        Perform any cleaning on the "username" prior to using it to get or
         create the user object.  Return the cleaned username.
 
         By default, return the username unchanged.
@@ -83,7 +90,9 @@ class LtiLaunchAuthenticationBackend(ModelBackend):
         return username
 
     def configure_user(self, request, user, created=True):
-        """Configure a user and return the updated user.
+        """Configure a user.
+
+        Configure a user and return the updated user.
 
         By default, return the user unmodified.
         """
@@ -97,7 +106,10 @@ class LtiLaunchAuthenticationBackend(ModelBackend):
         return user
 
     async def aconfigure_user(self, request, user, created=True):
-        """See configure_user()"""
+        """Configure a user asynchronously.
+
+        See configure_user()
+        """
         return await sync_to_async(self.configure_user)(request, user, created)
 
 
