@@ -1,15 +1,15 @@
-from asgiref.sync import sync_to_async
 from django.contrib.auth import get_user_model
 from django.contrib.auth.backends import ModelBackend
-from lti_tool.types import LtiLaunch
 
+from asgiref.sync import sync_to_async
+
+from lti_tool.types import LtiLaunch
 
 UserModel = get_user_model()
 
 
 class LtiLaunchAuthenticationBackend(ModelBackend):
-    """
-    This backend is to be used in conjunction with the ``LtiLaunchAuthenticationMiddleware``
+    """This backend is to be used in conjunction with the ``LtiLaunchAuthenticationMiddleware``
     found in the middleware module of this package, and is used when authentication is
     is handled by an LMS and passed in via LTI launch.
 
@@ -23,8 +23,7 @@ class LtiLaunchAuthenticationBackend(ModelBackend):
     create_unknown_user = True
 
     def authenticate(self, request, lti_launch_user_id):
-        """
-        The username passed as ``lti_launch_user_id`` is considered trusted. Return
+        """The username passed as ``lti_launch_user_id`` is considered trusted. Return
         the ``User`` object with the given username. Create a new ``User``
         object if ``create_unknown_user`` is ``True``.
 
@@ -76,8 +75,7 @@ class LtiLaunchAuthenticationBackend(ModelBackend):
         return user if self.user_can_authenticate(user) else None
 
     def clean_username(self, username):
-        """
-        Perform any cleaning on the "username" prior to using it to get or
+        """Perform any cleaning on the "username" prior to using it to get or
         create the user object.  Return the cleaned username.
 
         By default, return the username unchanged.
@@ -85,8 +83,7 @@ class LtiLaunchAuthenticationBackend(ModelBackend):
         return username
 
     def configure_user(self, request, user, created=True):
-        """
-        Configure a user and return the updated user.
+        """Configure a user and return the updated user.
 
         By default, return the user unmodified.
         """

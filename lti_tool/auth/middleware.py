@@ -1,14 +1,14 @@
-from asgiref.sync import iscoroutinefunction, markcoroutinefunction
 from django.contrib import auth
 from django.contrib.auth import load_backend
 from django.core.exceptions import ImproperlyConfigured
 
-from inspector.auth.backends import LtiLaunchAuthenticationBackend
+from asgiref.sync import iscoroutinefunction, markcoroutinefunction
+
+from lti_tool.auth.backends import LtiLaunchAuthenticationBackend
 
 
 class LtiLaunchAuthenticationMiddleware:
-    """
-    Middleware for utilizing LMS-provided authentication via LTI launch.
+    """Middleware for utilizing LMS-provided authentication via LTI launch.
 
     This middleware works in conjunction with `LtiLaunchMiddleware`.  The `LtiLaunchMiddleware`
     MUST appear before this middleware in the middleware list.
@@ -33,11 +33,7 @@ class LtiLaunchAuthenticationMiddleware:
             markcoroutinefunction(self)
         super().__init__()
 
-    # Name of request.META key to grab username from. Note that for
-    # request headers, normalization to all uppercase and the addition
-    # of a "HTTP_" prefix apply.
-    header = "REMOTE_USER"
-    force_logout_if_no_header = True
+    force_logout_if_no_launch = True
 
     def __call__(self, request):
         if self.is_async:
@@ -57,7 +53,7 @@ class LtiLaunchAuthenticationMiddleware:
             # If the LTI launch user doesn't exist then remove any existing
             # authenticated remote-user, or return (leaving request.user set to
             # AnonymousUser by the AuthenticationMiddleware).
-            if self.force_logout_if_no_header and request.user.is_authenticated:
+            if self.force_logout_if_no_launch and request.user.is_authenticated:
                 self._remove_invalid_user(request)
             return self.get_response(request)
         # If the user is already authenticated and that user is the user we are
@@ -97,7 +93,7 @@ class LtiLaunchAuthenticationMiddleware:
             # If the LTI launch user doesn't exist then remove any existing
             # authenticated remote-user, or return (leaving request.user set to
             # AnonymousUser by the AuthenticationMiddleware).
-            if self.force_logout_if_no_header:
+            if self.force_logout_if_no_launch:
                 user = await request.auser()
                 if user.is_authenticated:
                     await self._aremove_invalid_user(request)
@@ -126,8 +122,7 @@ class LtiLaunchAuthenticationMiddleware:
         return await self.get_response(request)
 
     def clean_username(self, username, request):
-        """
-        Allow the backend to clean the username, if the backend defines a
+        """Allow the backend to clean the username, if the backend defines a
         clean_username method.
         """
         backend_str = request.session[auth.BACKEND_SESSION_KEY]
@@ -139,8 +134,7 @@ class LtiLaunchAuthenticationMiddleware:
         return username
 
     def _remove_invalid_user(self, request):
-        """
-        Remove the current authenticated user in the request which is invalid
+        """Remove the current authenticated user in the request which is invalid
         but only if the user is authenticated via the LtiLaunchAuthenticationBackend.
         """
         try:
@@ -155,8 +149,7 @@ class LtiLaunchAuthenticationMiddleware:
                 auth.logout(request)
 
     async def _aremove_invalid_user(self, request):
-        """
-        Remove the current authenticated user in the request which is invalid
+        """Remove the current authenticated user in the request which is invalid
         but only if the user is authenticated via the LtiLaunchAuthenticationBackend.
         """
         try:
@@ -172,8 +165,7 @@ class LtiLaunchAuthenticationMiddleware:
 
 
 class PersistentLtiLaunchAuthenticationMiddleware(LtiLaunchAuthenticationMiddleware):
-    """
-    Middleware for web-server provided authentication on logon pages.
+    """Middleware for web-server provided authentication on logon pages.
 
     Like LtiLaunchAuthenticationMiddleware but keeps the user authenticated even if
     the ``request.META`` key is not found in the request. Useful for
@@ -182,4 +174,4 @@ class PersistentLtiLaunchAuthenticationMiddleware(LtiLaunchAuthenticationMiddlew
     Django's authentication mechanism.
     """
 
-    force_logout_if_no_header = False
+    force_logout_if_no_launch = False
