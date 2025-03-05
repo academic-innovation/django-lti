@@ -16,11 +16,13 @@ Start by adding ``lti_tool.auth.backends.LtiLaunchAuthenticationBackend`` to you
     ]
 
 Then, add ``lti_tool.auth.middleware.LtiLaunchAuthenticationMiddleware`` to the ``MIDDLEWARE`` setting.
-It's important to list the ``LtiLaunchAuthenticationMiddleware`` *after* ``AuthenticationMiddleware``.
+It's important to list the ``LtiLaunchAuthenticationMiddleware`` *after* ``LtiLaunchMiddleware`` and
+``AuthenticationMiddleware``.
 
 .. code-block:: python
 
     MIDDLEWARE = [
+        'lti_tool.middleware.LtiLaunchMiddleware',
         ...
         'django.contrib.auth.middleware.AuthenticationMiddleware',
         'lti_tool.auth.middleware.LtiLaunchAuthenticationMiddleware',

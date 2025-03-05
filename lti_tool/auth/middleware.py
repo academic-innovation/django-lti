@@ -10,8 +10,9 @@ from lti_tool.auth.backends import LtiLaunchAuthenticationBackend
 class LtiLaunchAuthenticationMiddleware:
     """Middleware for utilizing LMS-provided authentication via LTI launch.
 
-    This middleware works in conjunction with `LtiLaunchMiddleware`.  The
-    `LtiLaunchMiddleware` MUST appear before this middleware in the middleware list.
+    This middleware works in conjunction with `LtiLaunchMiddleware` and
+    Django's `AuthenticationMiddleware`.  The `LtiLaunchMiddleware` and
+    `AuthenticationMiddleware` MUST appear before this middleware in the middleware list.
 
     If request.user is not authenticated, then this middleware attempts to
     authenticate the username from ``request.lti_launch.user.sub``.

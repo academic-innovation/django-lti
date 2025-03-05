@@ -13,7 +13,7 @@ class LtiLaunchAuthenticationBackend(ModelBackend):
 
     This backend is to be used in conjunction with the
     ``LtiLaunchAuthenticationMiddleware`` found in the middleware module of
-    this package, and is used when authentication is is handled by an LMS and
+    this package, and is used when authentication is handled by an LMS and
     passed in via LTI launch.
 
     By default, the ``authenticate`` method creates ``User`` objects for
