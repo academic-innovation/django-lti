@@ -1,11 +1,8 @@
-from logging import getLogger
-
 from asgiref.sync import sync_to_async
 from django.contrib.auth import get_user_model
 from django.contrib.auth.backends import ModelBackend
 from lti_tool.types import LtiLaunch
 
-logger = getLogger(__name__)
 
 UserModel = get_user_model()
 
@@ -94,7 +91,6 @@ class LtiLaunchAuthenticationBackend(ModelBackend):
         By default, return the user unmodified.
         """
         if created:
-            logger.info(f"User {user} created")
             if hasattr(request, "lti_launch"):
                 launch: LtiLaunch = request.lti_launch
                 user.first_name = launch.user.given_name

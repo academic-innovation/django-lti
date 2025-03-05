@@ -1,13 +1,9 @@
-from logging import getLogger
-
 from asgiref.sync import iscoroutinefunction, markcoroutinefunction
 from django.contrib import auth
 from django.contrib.auth import load_backend
 from django.core.exceptions import ImproperlyConfigured
 
 from inspector.auth.backends import LtiLaunchAuthenticationBackend
-
-logger = getLogger(__name__)
 
 
 class LtiLaunchAuthenticationMiddleware:
