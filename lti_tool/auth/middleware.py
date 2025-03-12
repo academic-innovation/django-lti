@@ -12,7 +12,8 @@ class LtiLaunchAuthenticationMiddleware:
 
     This middleware works in conjunction with `LtiLaunchMiddleware` and
     Django's `AuthenticationMiddleware`.  The `LtiLaunchMiddleware` and
-    `AuthenticationMiddleware` MUST appear before this middleware in the middleware list.
+    `AuthenticationMiddleware` MUST appear before this middleware in the
+    middleware list.
 
     If request.user is not authenticated, then this middleware attempts to
     authenticate the username from ``request.lti_launch.user.sub``.
