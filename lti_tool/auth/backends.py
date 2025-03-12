@@ -1,7 +1,9 @@
+import warnings
+
 from django.contrib.auth import get_user_model
 from django.contrib.auth.backends import ModelBackend
-
-from asgiref.sync import sync_to_async
+from django.utils.deprecation import RemovedInDjango50Warning
+from django.utils.inspect import func_supports_parameter
 
 from lti_tool.types import LtiLaunch
 
@@ -53,30 +55,19 @@ class LtiLaunchAuthenticationBackend(ModelBackend):
                 user = UserModel._default_manager.get_by_natural_key(username)
             except UserModel.DoesNotExist:
                 pass
-        user = self.configure_user(request, user, created=created)
-        return user if self.user_can_authenticate(user) else None
 
-    async def aauthenticate(self, request, lti_launch_user_id):
-        """See authenticate()."""
-        if not lti_launch_user_id:
-            return
-        created = False
-        user = None
-        username = self.clean_username(lti_launch_user_id)
-
-        # Note that this could be accomplished in one try-except clause, but
-        # instead we use get_or_create when creating unknown users since it has
-        # built-in safeguards for multiple threads.
-        if self.create_unknown_user:
-            user, created = await UserModel._default_manager.aget_or_create(
-                **{UserModel.USERNAME_FIELD: username}
-            )
+        # RemovedInDjango50Warning: When the deprecation ends, replace with:
+        #   user = self.configure_user(request, user, created=created)
+        if func_supports_parameter(self.configure_user, "created"):
+            user = self.configure_user(request, user, created=created)
         else:
-            try:
-                user = await UserModel._default_manager.aget_by_natural_key(username)
-            except UserModel.DoesNotExist:
-                pass
-        user = await self.aconfigure_user(request, user, created=created)
+            warnings.warn(
+                f"`created=True` must be added to the signature of "
+                f"{self.__class__.__qualname__}.configure_user().",
+                category=RemovedInDjango50Warning,
+            )
+            if created:
+                user = self.configure_user(request, user)
         return user if self.user_can_authenticate(user) else None
 
     def clean_username(self, username):
@@ -107,13 +98,6 @@ class LtiLaunchAuthenticationBackend(ModelBackend):
                 launch.user.auth_user = user
                 launch.user.save()
         return user
-
-    async def aconfigure_user(self, request, user, created=True):
-        """Configure a user asynchronously.
-
-        See configure_user()
-        """
-        return await sync_to_async(self.configure_user)(request, user, created)
 
 
 class AllowAllUsersLtiLaunchAuthenticationBackend(LtiLaunchAuthenticationBackend):
