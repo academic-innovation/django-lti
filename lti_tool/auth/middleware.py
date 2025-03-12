@@ -1,11 +1,12 @@
 from django.contrib import auth
 from django.contrib.auth import load_backend
 from django.core.exceptions import ImproperlyConfigured
+from django.utils.deprecation import MiddlewareMixin
 
 from lti_tool.auth.backends import LtiLaunchAuthenticationBackend
 
 
-class LtiLaunchAuthenticationMiddleware:
+class LtiLaunchAuthenticationMiddleware(MiddlewareMixin):
     """Middleware for utilizing LMS-provided authentication via LTI launch.
 
     This middleware works in conjunction with `LtiLaunchMiddleware` and
