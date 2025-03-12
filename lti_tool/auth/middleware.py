@@ -1,3 +1,4 @@
+from django.conf import settings
 from django.contrib import auth
 from django.contrib.auth import load_backend
 from django.core.exceptions import ImproperlyConfigured
@@ -52,7 +53,7 @@ class LtiLaunchAuthenticationMiddleware(MiddlewareMixin):
                 self._remove_invalid_user(request)
             return
         try:
-            username = request.lti_launch.user.sub
+            username = self.get_username(request)
         except LtiUser.DoesNotExist:
             # If the LTI launch user doesn't exist then remove any existing
             # authenticated remote-user, or return (leaving request.user set to
@@ -90,6 +91,24 @@ class LtiLaunchAuthenticationMiddleware(MiddlewareMixin):
             username = backend.clean_username(username)
         except AttributeError:  # Backend has no clean_username method.
             pass
+        return username
+
+    def get_username(self, request):
+        """Get the username from the request.
+
+        This method returns the value that will be used as the username of
+        the Django user object. By default, this is the value of the
+        `sub` attribute of the LTI user object.
+        """
+        if hasattr(settings, "LTI_TOOL") and settings.LTI_TOOL.get(
+            "use_person_sourcedid", False
+        ):
+            username = request.lti_launch.get_claim(
+                "https://purl.imsglobal.org/spec/lti/claim/lis"
+            ).get("person_sourcedid")
+        else:
+            username = request.lti_launch.user.sub
+
         return username
 
     def _remove_invalid_user(self, request):
