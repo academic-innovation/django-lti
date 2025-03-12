@@ -103,6 +103,9 @@ class LtiLaunchAuthenticationBackend(ModelBackend):
                 user.last_name = launch.user.family_name
                 user.email = launch.user.email
                 user.save()
+                # associate the Django user with the LTI tool user
+                launch.user.auth_user = user
+                launch.user.save()
         return user
 
     async def aconfigure_user(self, request, user, created=True):
