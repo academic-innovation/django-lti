@@ -27,3 +27,18 @@ It's important to list the ``LtiLaunchAuthenticationMiddleware`` *after* ``LtiLa
         'django.contrib.auth.middleware.AuthenticationMiddleware',
         'lti_tool.auth.middleware.LtiLaunchAuthenticationMiddleware',
     ]
+
+Configuring the Django username
+-------------------------------
+
+By default, the username is set to the ``sub`` value from the LTI launch.  You can use the ``person_sourcedid``
+value from the ``lis`` claim instead by adding this to your Django settings:
+
+.. code-block:: python
+
+    LTI_TOOL = {
+        'use_person_sourcedid': True,
+    }
+
+If you want to use a different field, you can subclass ``LtiLaunchAuthenticationBackend`` and override the
+``get_username`` method.
