@@ -10,6 +10,7 @@ class LtiDeploymentInline(admin.TabularInline):
 
 @admin.register(models.LtiRegistration)
 class LtiRegistrationAdmin(admin.ModelAdmin):
+    list_display = ["name", "datetime_created", "is_active"]
     fieldsets = [
         (
             None,
