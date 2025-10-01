@@ -1,4 +1,3 @@
-import re
 from typing import Optional
 
 from django.http.request import HttpRequest
@@ -9,6 +8,7 @@ from pylti1p3.deployment import Deployment
 from pylti1p3.tool_config.abstract import ToolConfAbstract
 
 from .constants import AgsScope, ContextRole, ContextType
+from .lti_core.utils import normalize_role
 from .models import (
     LtiContext,
     LtiDeployment,
@@ -95,13 +95,6 @@ class DjangoToolConfig(ToolConfAbstract):
                 registration=self.registration, deployment_id=deployment_id
             )
         return _prepare_deployment(self.deployment)
-
-
-def normalize_role(role: str) -> str:
-    """Expands a simple context role to a full URI, if needed."""
-    if re.match(r"^\w+$", role):
-        return f"http://purl.imsglobal.org/vocab/lis/v2/membership#{role}"
-    return role
 
 
 def get_launch_from_request(
