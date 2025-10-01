@@ -7,7 +7,7 @@ from pylti1p3.contrib.django.message_launch import DjangoMessageLaunch
 from pylti1p3.deployment import Deployment
 from pylti1p3.tool_config.abstract import ToolConfAbstract
 
-from .constants import AgsScope, ContextRole, ContextType
+from .lti_core.constants import AgsScope, ContextRole, ContextType
 from .lti_core.utils import normalize_role
 from .models import (
     LtiContext,

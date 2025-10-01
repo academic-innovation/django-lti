@@ -15,7 +15,8 @@ from pylti1p3.deep_link_resource import DeepLinkResource
 from pylti1p3.message_launch import MessageLaunch
 from pylti1p3.registration import Registration
 
-from .constants import ContextRole
+from .lti_core.constants import ContextRole
+from .lti_core.utils import normalize_role
 
 
 class KeyQuerySet(models.QuerySet):
@@ -363,8 +364,6 @@ class LtiContext(models.Model):
 
     def update_memberships(self, member_data: List[dict]):
         """Updates memberships for this context using NRPS data."""
-        from .utils import normalize_role
-
         registration = self.deployment.registration
         for member in member_data:
             user_defaults = {
