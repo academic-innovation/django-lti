@@ -189,6 +189,9 @@ class LtiPlatformInstance(models.Model):
 
     issuer = models.CharField(_("issuer"), max_length=255)
     guid = models.CharField(_("GUID"), max_length=255)
+    lti1p1_id_on_platform = models.CharField(
+        _("LTI 1.1 ID"), max_length=255, blank=True
+    )
     contact_email = models.EmailField(_("contact email"), blank=True)
     description = models.TextField(_("description"), blank=True)
     name = models.CharField(_("name"), max_length=500, blank=True)
@@ -285,6 +288,9 @@ class LtiUser(models.Model):
         verbose_name=_("registration"),
     )
     sub = models.CharField(_("subject"), max_length=255)
+    lti1p1_id_on_platform = models.CharField(
+        _("LTI 1.1 ID"), max_length=255, blank=True
+    )
     given_name = models.CharField(_("given name"), max_length=500, blank=True)
     family_name = models.CharField(_("family name"), max_length=500, blank=True)
     name = models.CharField(_("name"), max_length=500, blank=True)
@@ -328,6 +334,9 @@ class LtiContext(models.Model):
         verbose_name=_("deployment"),
     )
     id_on_platform = models.CharField(_("ID on platform"), max_length=255, blank=True)
+    lti1p1_id_on_platform = models.CharField(
+        _("LTI 1.1 ID"), max_length=255, blank=True
+    )
     label = models.CharField(_("label"), max_length=255, blank=True)
     title = models.CharField(_("title"), max_length=500, blank=True)
     members = models.ManyToManyField(
@@ -449,6 +458,9 @@ class LtiResourceLink(models.Model):
         verbose_name=_("context"),
     )
     id_on_platform = models.CharField(_("ID on platform"), max_length=255)
+    lti1p1_id_on_platform = models.CharField(
+        _("LTI 1.1 ID"), max_length=255, blank=True
+    )
     title = models.CharField(_("title"), max_length=500, blank=True)
     description = models.TextField(_("description"), blank=True)
     datetime_created = models.DateTimeField(_("created"), default=now, editable=False)
