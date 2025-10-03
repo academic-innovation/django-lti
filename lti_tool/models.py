@@ -1,3 +1,4 @@
+import functools
 import json
 from typing import List, NamedTuple, Optional
 from urllib import parse
@@ -6,6 +7,7 @@ from uuid import uuid4
 from django.conf import settings
 from django.db import models
 from django.http import HttpResponse
+from django.utils.decorators import method_decorator
 from django.utils.functional import cached_property
 from django.utils.timezone import now
 from django.utils.translation import gettext_lazy as _
@@ -16,7 +18,7 @@ from pylti1p3.message_launch import MessageLaunch
 from pylti1p3.registration import Registration
 
 from .lti_core.constants import ContextRole
-from .lti_core.utils import normalize_role
+from .lti_core.utils import normalize_role, validate_migration_claim
 
 
 class KeyQuerySet(models.QuerySet):
@@ -743,6 +745,24 @@ class LtiLaunch:
                 url_parts.fragment,
             )
         )
+
+    @property
+    def migration_claim(self):
+        return self.get_claim("https://purl.imsglobal.org/spec/lti/claim/lti1p1")
+
+    @property
+    def lti1p1_consumer_key(self):
+        if self.migration_claim is None:
+            return None
+        return self.migration_claim["oauth_consumer_key"]
+
+    @method_decorator(functools.cache)
+    def has_valid_migration_claim(self, lti1p1_secret: str) -> bool:
+        """Indicates if the launch has a valid LTI 1.1 migration claim."""
+        launch_data = self.get_launch_data()
+        if launch_data is None:
+            return False
+        return validate_migration_claim(launch_data, lti1p1_secret)
 
     def deep_link_response(self, resources: List[DeepLinkResource]) -> HttpResponse:
         """Creates a deep linking response for this launch."""

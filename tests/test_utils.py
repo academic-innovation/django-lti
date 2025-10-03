@@ -1,6 +1,7 @@
 import pytest
 
 from lti_tool import factories, models, utils
+from lti_tool.lti_core.utils import compute_oauth_consumer_key_sign
 
 
 @pytest.mark.django_db
@@ -54,6 +55,40 @@ class TestSyncUserFromLaunch:
         assert user.name == "First Last"
         assert user.email == "first.last@example.com"
         assert user.picture_url == "https://example.com/picture.jpg"
+
+    @pytest.mark.parametrize("user_id_present", [True, False])
+    def test_sync_user_with_migration(self, monkeypatch, user_id_present):
+        migration_claim = {"oauth_consumer_key": "179248902"}
+        if user_id_present:
+            migration_claim["user_id"] = "lti1p1"
+        migration_claim["oauth_consumer_key_sign"] = compute_oauth_consumer_key_sign(
+            "179248902",
+            "689302",
+            "https://lmsvendor.com",
+            "PM48OJSfGDTAzAo",
+            1551290856,
+            "172we8671fd8z",
+            "oauth_secret",
+        )
+        launch_data = {
+            "nonce": "172we8671fd8z",
+            "iat": 1551290796,
+            "exp": 1551290856,
+            "iss": "https://lmsvendor.com",
+            "aud": "PM48OJSfGDTAzAo",
+            "https://purl.imsglobal.org/spec/lti/claim/deployment_id": "689302",
+            "sub": "abc123",
+            "https://purl.imsglobal.org/spec/lti/claim/lti1p1": migration_claim,
+        }
+        registration = factories.LtiRegistrationFactory()
+        monkeypatch.setattr(
+            models.LtiLaunch, "get_launch_data", lambda self: launch_data
+        )
+        monkeypatch.setattr(models.LtiLaunch, "registration", registration)
+        lti_launch = models.LtiLaunch(None)
+        user = utils.sync_user_from_launch(lti_launch, "oauth_secret")
+        assert user.sub == "abc123"
+        assert user.lti1p1_id_on_platform == "lti1p1" if user_id_present else "abc123"
 
 
 @pytest.mark.django_db
@@ -130,6 +165,44 @@ class TestSyncContextFromLaunch:
         assert updated_context.label == "CTX101"
         assert not updated_context.is_group
         assert updated_context.is_course_offering
+
+    @pytest.mark.parametrize("context_id_present", [True, False])
+    def test_sync_context_with_migration(self, monkeypatch, context_id_present):
+        context_claim = {"id": "c1p3"}
+        deployment = factories.LtiDeploymentFactory()
+        migration_claim = {"oauth_consumer_key": "179248902"}
+        if context_id_present:
+            migration_claim["context_id"] = "c1p1"
+        migration_claim["oauth_consumer_key_sign"] = compute_oauth_consumer_key_sign(
+            "179248902",
+            deployment.deployment_id,
+            "https://lmsvendor.com",
+            "PM48OJSfGDTAzAo",
+            1551290856,
+            "172we8671fd8z",
+            "oauth_secret",
+        )
+        launch_data = {
+            "nonce": "172we8671fd8z",
+            "iat": 1551290796,
+            "exp": 1551290856,
+            "iss": "https://lmsvendor.com",
+            "aud": "PM48OJSfGDTAzAo",
+            "https://purl.imsglobal.org/spec/lti/claim/deployment_id": (
+                deployment.deployment_id
+            ),
+            "https://purl.imsglobal.org/spec/lti/claim/context": context_claim,
+            "sub": "abc123",
+            "https://purl.imsglobal.org/spec/lti/claim/lti1p1": migration_claim,
+        }
+        monkeypatch.setattr(
+            models.LtiLaunch, "get_launch_data", lambda self: launch_data
+        )
+        monkeypatch.setattr(models.LtiLaunch, "deployment", deployment)
+        lti_launch = models.LtiLaunch(None)
+        context = utils.sync_context_from_launch(lti_launch, "oauth_secret")
+        assert context.id_on_platform == "c1p3"
+        assert context.lti1p1_id_on_platform == "c1p1" if context_id_present else "c1p3"
 
 
 @pytest.mark.django_db
@@ -215,6 +288,53 @@ class TestSyncResourceLinkFromLaunch:
         assert resource_link.title == title
         assert resource_link.description == description
 
+    @pytest.mark.parametrize("resource_link_id_present", (True, False))
+    def test_sync_resource_link_with_migration(
+        self, monkeypatch, resource_link_id_present
+    ):
+        context = factories.LtiContextFactory()
+        resource_link_claim = {
+            "id": "rl1p3",
+        }
+        migration_claim = {"oauth_consumer_key": "179248902"}
+        if resource_link_id_present:
+            migration_claim["resource_link_id"] = "rl1p1"
+        migration_claim["oauth_consumer_key_sign"] = compute_oauth_consumer_key_sign(
+            "179248902",
+            "deployment",
+            "https://lmsvendor.com",
+            "PM48OJSfGDTAzAo",
+            1551290856,
+            "172we8671fd8z",
+            "oauth_secret",
+        )
+        launch_data = {
+            "nonce": "172we8671fd8z",
+            "iat": 1551290796,
+            "exp": 1551290856,
+            "iss": "https://lmsvendor.com",
+            "aud": "PM48OJSfGDTAzAo",
+            "https://purl.imsglobal.org/spec/lti/claim/deployment_id": "deployment",
+            "https://purl.imsglobal.org/spec/lti/claim/resource_link": (
+                resource_link_claim
+            ),
+            "sub": "abc123",
+            "https://purl.imsglobal.org/spec/lti/claim/lti1p1": migration_claim,
+        }
+        monkeypatch.setattr(
+            models.LtiLaunch, "get_launch_data", lambda self: launch_data
+        )
+        lti_launch = models.LtiLaunch(None)
+        resource_link = utils.sync_resource_link_from_launch(
+            lti_launch, context, "oauth_secret"
+        )
+        assert resource_link.id_on_platform == "rl1p3"
+        assert (
+            resource_link.lti1p1_id_on_platform == "rl1p1"
+            if resource_link_id_present
+            else "rl1p3"
+        )
+
 
 @pytest.mark.django_db
 class TestSyncPlatformInstanceFromLaunch:
@@ -289,6 +409,52 @@ class TestSyncPlatformInstanceFromLaunch:
         assert updated_platform_instance.product_family_code == "example"
         assert updated_platform_instance.version == "1.0"
         assert updated_platform_instance.deployments.first() == deployment
+
+    @pytest.mark.parametrize("platform_instance_id_present", (True, False))
+    def test_sync_platform_instance_with_migration(
+        self, monkeypatch, platform_instance_id_present
+    ):
+        deployment = factories.LtiDeploymentFactory(platform_instance=None)
+        issuer = deployment.registration.issuer
+        migration_claim = {"oauth_consumer_key": "179248902"}
+        if platform_instance_id_present:
+            migration_claim["tool_consumer_instance_guid"] = "pi1p1"
+        migration_claim["oauth_consumer_key_sign"] = compute_oauth_consumer_key_sign(
+            "179248902",
+            deployment.deployment_id,
+            issuer,
+            "PM48OJSfGDTAzAo",
+            1551290856,
+            "172we8671fd8z",
+            "oauth_secret",
+        )
+        launch_data = {
+            "iss": issuer,
+            "https://purl.imsglobal.org/spec/lti/claim/tool_platform": {
+                "guid": "pi1p3"
+            },
+            "nonce": "172we8671fd8z",
+            "iat": 1551290796,
+            "exp": 1551290856,
+            "aud": "PM48OJSfGDTAzAo",
+            "https://purl.imsglobal.org/spec/lti/claim/deployment_id": (
+                deployment.deployment_id
+            ),
+            "sub": "abc123",
+            "https://purl.imsglobal.org/spec/lti/claim/lti1p1": migration_claim,
+        }
+        monkeypatch.setattr(models.LtiLaunch, "get_launch_data", lambda s: launch_data)
+        monkeypatch.setattr(models.LtiLaunch, "deployment", deployment)
+        lti_launch = models.LtiLaunch(None)
+        platform_instance = utils.sync_platform_instance_from_launch(
+            lti_launch, "oauth_secret"
+        )
+        assert platform_instance.guid == "pi1p3"
+        assert (
+            platform_instance.lti1p1_id_on_platform == "pi1p1"
+            if platform_instance_id_present
+            else "pi1p3"
+        )
 
 
 @pytest.mark.django_db
