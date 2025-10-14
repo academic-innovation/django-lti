@@ -47,4 +47,4 @@ def validate_migration_claim(launch_data: dict, oauth_secret: str) -> bool:
         launch_data["nonce"],
         oauth_secret,
     )
-    return oauth_consumer_key_sign == computed_signature
+    return hmac.compare_digest(oauth_consumer_key_sign, computed_signature)
