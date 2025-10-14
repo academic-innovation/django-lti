@@ -1,4 +1,3 @@
-import functools
 import json
 from typing import List, NamedTuple, Optional
 from urllib import parse
@@ -7,7 +6,6 @@ from uuid import uuid4
 from django.conf import settings
 from django.db import models
 from django.http import HttpResponse
-from django.utils.decorators import method_decorator
 from django.utils.functional import cached_property
 from django.utils.timezone import now
 from django.utils.translation import gettext_lazy as _
@@ -756,7 +754,6 @@ class LtiLaunch:
             return None
         return self.migration_claim["oauth_consumer_key"]
 
-    @method_decorator(functools.cache)
     def has_valid_migration_claim(self, lti1p1_secret: str) -> bool:
         """Indicates if the launch has a valid LTI 1.1 migration claim."""
         launch_data = self.get_launch_data()
