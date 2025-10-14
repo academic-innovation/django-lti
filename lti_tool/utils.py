@@ -265,7 +265,9 @@ def sync_platform_instance_from_launch(
     return platform_instance
 
 
-def sync_data_from_launch(lti_launch: LtiLaunch, lti1p1_secret: Optional[str]) -> None:
+def sync_data_from_launch(
+    lti_launch: LtiLaunch, lti1p1_secret: Optional[str] = None
+) -> None:
     user = sync_user_from_launch(lti_launch, lti1p1_secret)
     if not lti_launch.is_data_privacy_launch:
         context = sync_context_from_launch(lti_launch, lti1p1_secret)
