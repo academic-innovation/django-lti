@@ -48,7 +48,7 @@ jobs:
     runs-on: ubuntu-latest
     strategy:
       matrix:
-        python: ["3.9", "3.10", "3.11", "3.12", "3.13"]
+        python: ["3.9", "3.10", "3.11", "3.12", "3.13", "3.14"]
         django: ["4.2.0", "5.0.0", "5.1.0", "5.2.0"]
         exclude:
           - django: "5.0.0"
@@ -61,6 +61,12 @@ jobs:
             python: "3.13"
           - django: "5.0.0"
             python: "3.13"
+          - django: "4.2.0"
+            python: "3.14"
+          - django: "5.0.0"
+            python: "3.14"
+          - django: "5.1.0"
+            python: "3.14"
     steps:
       - uses: actions/checkout@v5
       - uses: actions/setup-python@v6
