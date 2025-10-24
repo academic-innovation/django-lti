@@ -1,3 +1,5 @@
+from typing import Optional
+
 from django.http import (
     HttpRequest,
     HttpResponse,
@@ -76,7 +78,8 @@ class LtiLaunchBaseView(View):
     def post(self, request: LtiHttpRequest, *args, **kwargs):
         request.session.clear()
         lti_launch = get_launch_from_request(request)
-        sync_data_from_launch(lti_launch)
+        lti1p1_secret = self.get_lti1p1_secret(lti_launch.lti1p1_consumer_key)
+        sync_data_from_launch(lti_launch, lti1p1_secret)
         self.launch_setup(request, lti_launch)
         if not lti_launch.deployment.is_active:
             return self.handle_inactive_deployment(request, lti_launch)
@@ -90,6 +93,13 @@ class LtiLaunchBaseView(View):
             return self.handle_submission_review_launch(request, lti_launch)
         if request.lti_launch.is_data_privacy_launch:
             return self.handle_data_privacy_launch(request, lti_launch)
+
+    def get_lti1p1_secret(self, oauth_consumer_key: Optional[str]):
+        """Returns the LTI 1.1 secret for the provided consumer key.
+
+        Override this method to validate and sync data from the LTI 1.1 migration claim.
+        """
+        return None
 
     def launch_setup(self, request: HttpRequest, lti_launch: LtiLaunch) -> None:
         pass

@@ -1,4 +1,3 @@
-import re
 from typing import Optional
 
 from django.http.request import HttpRequest
@@ -8,7 +7,8 @@ from pylti1p3.contrib.django.message_launch import DjangoMessageLaunch
 from pylti1p3.deployment import Deployment
 from pylti1p3.tool_config.abstract import ToolConfAbstract
 
-from .constants import AgsScope, ContextRole, ContextType
+from .lti_core.constants import AgsScope, ContextRole, ContextType
+from .lti_core.utils import normalize_role
 from .models import (
     LtiContext,
     LtiDeployment,
@@ -97,13 +97,6 @@ class DjangoToolConfig(ToolConfAbstract):
         return _prepare_deployment(self.deployment)
 
 
-def normalize_role(role: str) -> str:
-    """Expands a simple context role to a full URI, if needed."""
-    if re.match(r"^\w+$", role):
-        return f"http://purl.imsglobal.org/vocab/lis/v2/membership#{role}"
-    return role
-
-
 def get_launch_from_request(
     request: HttpRequest, launch_id: Optional[str] = None
 ) -> LtiLaunch:
@@ -125,7 +118,9 @@ def get_launch_from_request(
     return LtiLaunch(message_launch)
 
 
-def sync_user_from_launch(lti_launch: LtiLaunch) -> LtiUser:
+def sync_user_from_launch(
+    lti_launch: LtiLaunch, lti1p1_secret: Optional[str] = None
+) -> LtiUser:
     sub = lti_launch.get_claim("sub")
     user_claims = {
         "given_name": lti_launch.get_claim("given_name"),
@@ -134,6 +129,12 @@ def sync_user_from_launch(lti_launch: LtiLaunch) -> LtiUser:
         "email": lti_launch.get_claim("email"),
         "picture_url": lti_launch.get_claim("picture"),
     }
+    if lti1p1_secret is not None and lti_launch.has_valid_migration_claim(
+        lti1p1_secret
+    ):
+        user_claims["lti1p1_id_on_platform"] = lti_launch.migration_claim.get(
+            "user_id", sub
+        )
     lti_user, _created = LtiUser.objects.update_or_create(
         registration=lti_launch.registration,
         sub=sub,
@@ -156,7 +157,9 @@ def _get_ags_props(lti_launch: LtiLaunch) -> dict:
     }
 
 
-def sync_context_from_launch(lti_launch: LtiLaunch) -> LtiContext:
+def sync_context_from_launch(
+    lti_launch: LtiLaunch, lti1p1_secret: Optional[str] = None
+) -> LtiContext:
     context_claim = {} if lti_launch.context_claim is None else lti_launch.context_claim
     nrps_claim = lti_launch.nrps_claim
     nrps_endpoint = "" if nrps_claim is None else nrps_claim["context_memberships_url"]
@@ -172,6 +175,12 @@ def sync_context_from_launch(lti_launch: LtiLaunch) -> LtiContext:
     if nrps_endpoint:
         defaults["memberships_url"] = nrps_endpoint
     defaults.update(_get_ags_props(lti_launch))
+    if lti1p1_secret is not None and lti_launch.has_valid_migration_claim(
+        lti1p1_secret
+    ):
+        defaults["lti1p1_id_on_platform"] = lti_launch.migration_claim.get(
+            "context_id", context_claim.get("id", "")
+        )
     context, _created = LtiContext.objects.update_or_create(
         deployment=lti_launch.deployment,
         id_on_platform=context_claim.get("id", ""),
@@ -202,41 +211,53 @@ def sync_membership_from_launch(
 
 
 def sync_resource_link_from_launch(
-    lti_launch: LtiLaunch, context: LtiContext
+    lti_launch: LtiLaunch, context: LtiContext, lti1p1_secret: Optional[str] = None
 ) -> LtiResourceLink:
     resource_link_claim = {
         k: v for k, v in lti_launch.resource_link_claim.items() if v is not None
     }
+    defaults = {
+        "title": resource_link_claim.get("title", ""),
+        "description": resource_link_claim.get("description", ""),
+    }
+    if lti1p1_secret is not None and lti_launch.has_valid_migration_claim(
+        lti1p1_secret
+    ):
+        defaults["lti1p1_id_on_platform"] = lti_launch.migration_claim.get(
+            "resource_link_id", resource_link_claim["id"]
+        )
     resource_link, _created = LtiResourceLink.objects.update_or_create(
         context=context,
         id_on_platform=resource_link_claim["id"],
-        defaults={
-            "title": resource_link_claim.get("title", ""),
-            "description": resource_link_claim.get("description", ""),
-        },
+        defaults=defaults,
     )
     return resource_link
 
 
 def sync_platform_instance_from_launch(
-    lti_launch: LtiLaunch,
+    lti_launch: LtiLaunch, lti1p1_secret: Optional[str] = None
 ) -> Optional[LtiPlatformInstance]:
     platform_instance_claim = lti_launch.platform_instance_claim
     if platform_instance_claim is None:
         return None
+    defaults = {
+        "contact_email": platform_instance_claim.get("contact_email", ""),
+        "description": platform_instance_claim.get("description", ""),
+        "name": platform_instance_claim.get("name", ""),
+        "url": platform_instance_claim.get("url", ""),
+        "product_family_code": platform_instance_claim.get("product_family_code", ""),
+        "version": platform_instance_claim.get("version", ""),
+    }
+    if lti1p1_secret is not None and lti_launch.has_valid_migration_claim(
+        lti1p1_secret
+    ):
+        defaults["lti1p1_id_on_platform"] = lti_launch.migration_claim.get(
+            "tool_consumer_instance_guid", platform_instance_claim["guid"]
+        )
     platform_instance, _created = LtiPlatformInstance.objects.update_or_create(
         issuer=lti_launch.get_claim("iss"),
         guid=platform_instance_claim["guid"],
-        defaults={
-            "contact_email": platform_instance_claim.get("contact_email", ""),
-            "description": platform_instance_claim.get("description", ""),
-            "name": platform_instance_claim.get("name", ""),
-            "url": platform_instance_claim.get("url", ""),
-            "product_family_code": platform_instance_claim.get(
-                "product_family_code", ""
-            ),
-            "version": platform_instance_claim.get("version", ""),
-        },
+        defaults=defaults,
     )
     deployment = lti_launch.deployment
     deployment.platform_instance = platform_instance
@@ -244,11 +265,13 @@ def sync_platform_instance_from_launch(
     return platform_instance
 
 
-def sync_data_from_launch(lti_launch: LtiLaunch) -> None:
-    user = sync_user_from_launch(lti_launch)
+def sync_data_from_launch(
+    lti_launch: LtiLaunch, lti1p1_secret: Optional[str] = None
+) -> None:
+    user = sync_user_from_launch(lti_launch, lti1p1_secret)
     if not lti_launch.is_data_privacy_launch:
-        context = sync_context_from_launch(lti_launch)
+        context = sync_context_from_launch(lti_launch, lti1p1_secret)
         sync_membership_from_launch(lti_launch, user, context)
         if not lti_launch.is_deep_link_launch:
-            sync_resource_link_from_launch(lti_launch, context)
-    sync_platform_instance_from_launch(lti_launch)
+            sync_resource_link_from_launch(lti_launch, context, lti1p1_secret)
+    sync_platform_instance_from_launch(lti_launch, lti1p1_secret)
