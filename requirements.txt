@@ -10,5 +10,5 @@ isort==5.10.1
 mypy==0.942
 nox==2024.10.09
 PyLTI1p3==2.0.0
-pytest-django==4.5.1
-pytest==6.2.5
+pytest-django==4.11.1
+pytest==8.4.2
