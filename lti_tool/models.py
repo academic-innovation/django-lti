@@ -752,7 +752,7 @@ class LtiLaunch:
     def lti1p1_consumer_key(self):
         if self.migration_claim is None:
             return None
-        return self.migration_claim["oauth_consumer_key"]
+        return self.migration_claim.get("oauth_consumer_key")
 
     def has_valid_migration_claim(self, lti1p1_secret: str) -> bool:
         """Indicates if the launch has a valid LTI 1.1 migration claim."""
