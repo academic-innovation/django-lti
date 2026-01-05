@@ -53,3 +53,16 @@ and components of an LTI launch.
 .. autoclass:: lti_tool.models.LtiRegistration
    :members:
    :exclude-members: DoesNotExist, MultipleObjectsReturned
+
+
+LTI Authentication
+------------------
+
+``django-lti`` provides a custom authentication backend and middleware to authenticate
+users using LTI launch data.
+
+.. autoclass:: lti_tool.auth.backends.LtiLaunchAuthenticationBackend
+   :members:
+
+.. autoclass:: lti_tool.auth.middleware.LtiLaunchAuthenticationMiddleware
+   :members:
