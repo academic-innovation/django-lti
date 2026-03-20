@@ -5,6 +5,52 @@ from lti_tool.lti_core.utils import compute_oauth_consumer_key_sign
 
 
 @pytest.mark.django_db
+class TestSyncDeploymentFromLaunch:
+    """Tests for utils.sync_deployment_from_launch."""
+
+    def test_pns_absent(self, monkeypatch):
+        original_deployment = factories.LtiDeploymentFactory()
+        launch_data = {
+            "https://purl.imsglobal.org/spec/lti/claim/deployment_id": (
+                original_deployment.deployment_id
+            ),
+        }
+        monkeypatch.setattr(
+            models.LtiLaunch, "get_launch_data", lambda self: launch_data
+        )
+        monkeypatch.setattr(models.LtiLaunch, "deployment", original_deployment)
+        lti_launch = models.LtiLaunch(None)
+        deployment = utils.sync_deployment_from_launch(lti_launch)
+        assert deployment.pns_url == ""
+        assert not deployment.supports_context_copy_notice
+        assert not deployment.supports_asset_processor_submission_notice
+
+    def test_pns_present(self, monkeypatch):
+        original_deployment = factories.LtiDeploymentFactory()
+        launch_data = {
+            "https://purl.imsglobal.org/spec/lti/claim/deployment_id": (
+                original_deployment.deployment_id
+            ),
+            "https://purl.imsglobal.org/spec/lti/claim/platformnotificationservice": {
+                "platform_notification_service_url": "https://pns.com/",
+                "notice_types_supported": [
+                    "LtiContextCopyNotice",
+                    "LtiAssetProcessorSubmissionNotice",
+                ],
+            },
+        }
+        monkeypatch.setattr(
+            models.LtiLaunch, "get_launch_data", lambda self: launch_data
+        )
+        monkeypatch.setattr(models.LtiLaunch, "deployment", original_deployment)
+        lti_launch = models.LtiLaunch(None)
+        deployment = utils.sync_deployment_from_launch(lti_launch)
+        assert deployment.pns_url == "https://pns.com/"
+        assert deployment.supports_context_copy_notice
+        assert deployment.supports_asset_processor_submission_notice
+
+
+@pytest.mark.django_db
 class TestSyncUserFromLaunch:
     """Tests for utils.sync_user_from_launch."""
 

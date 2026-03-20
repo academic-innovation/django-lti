@@ -255,6 +255,13 @@ class LtiDeployment(models.Model):
         null=True,
         blank=True,
     )
+    pns_url = models.URLField(_("PNS URL"), blank=True)
+    supports_context_copy_notice = models.BooleanField(
+        _("supports Context Copy Notice"), default=False
+    )
+    supports_asset_processor_submission_notice = models.BooleanField(
+        _("supports Asset Processor Submission Notice"), default=False
+    )
     datetime_created = models.DateTimeField(_("created"), default=now, editable=False)
     datetime_modified = models.DateTimeField(_("modified"), auto_now=True)
 
