@@ -118,6 +118,42 @@ def get_launch_from_request(
     return LtiLaunch(message_launch)
 
 
+def sync_deployment_from_launch(lti_launch: LtiLaunch) -> LtiDeployment:
+    deployment = lti_launch.deployment
+    pns_claim = lti_launch.get_claim(
+        "https://purl.imsglobal.org/spec/lti/claim/platformnotificationservice"
+    )
+    if pns_claim is None:
+        return deployment
+    pns_url = pns_claim.get("platform_notification_service_url", "")
+    supported_notices = pns_claim.get("notice_types_supported", [])
+    supports_context_copy_notice = "LtiContextCopyNotice" in supported_notices
+    supports_asset_processor_submission_notice = (
+        "LtiAssetProcessorSubmissionNotice" in supported_notices
+    )
+    sync_required = (
+        deployment.pns_url != pns_url
+        or deployment.supports_context_copy_notice != supports_context_copy_notice
+        or deployment.supports_asset_processor_submission_notice
+        != supports_asset_processor_submission_notice
+    )
+    if sync_required:
+        deployment.pns_url = pns_url
+        deployment.supports_context_copy_notice = supports_context_copy_notice
+        deployment.supports_asset_processor_submission_notice = (
+            supports_asset_processor_submission_notice
+        )
+        deployment.save(
+            update_fields=[
+                "pns_url",
+                "supports_context_copy_notice",
+                "supports_asset_processor_submission_notice",
+                "datetime_modified",
+            ]
+        )
+    return deployment
+
+
 def sync_user_from_launch(
     lti_launch: LtiLaunch, lti1p1_secret: Optional[str] = None
 ) -> LtiUser:
@@ -268,6 +304,7 @@ def sync_platform_instance_from_launch(
 def sync_data_from_launch(
     lti_launch: LtiLaunch, lti1p1_secret: Optional[str] = None
 ) -> None:
+    sync_deployment_from_launch(lti_launch)
     user = sync_user_from_launch(lti_launch, lti1p1_secret)
     if not lti_launch.is_data_privacy_launch:
         context = sync_context_from_launch(lti_launch, lti1p1_secret)

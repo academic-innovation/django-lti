@@ -235,6 +235,11 @@ class LtiDeployment(models.Model):
         is_active (bool): Indicates if the deployment has been activated in the tool.
         platform_instance (LtiPlatformInstance): The platform instance associated with
             this deployment.
+        pns_url (str): The URL for the Platform Notification Service.
+        supports_context_copy_notice (bool): Indicates if the deployment supports
+            the Context Copy Notice.
+        supports_asset_processor_submission_notice (bool): Indicates if the deployment
+            supports the Asset Processor Submission Notice.
         datetime_created (datetime): When the deployment was created.
         datetime_modified (datetime): When the deployment was last modified.
     """
@@ -254,6 +259,13 @@ class LtiDeployment(models.Model):
         verbose_name=_("platform instance"),
         null=True,
         blank=True,
+    )
+    pns_url = models.URLField(_("PNS URL"), blank=True)
+    supports_context_copy_notice = models.BooleanField(
+        _("supports Context Copy Notice"), default=False
+    )
+    supports_asset_processor_submission_notice = models.BooleanField(
+        _("supports Asset Processor Submission Notice"), default=False
     )
     datetime_created = models.DateTimeField(_("created"), default=now, editable=False)
     datetime_modified = models.DateTimeField(_("modified"), auto_now=True)
