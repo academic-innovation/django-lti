@@ -1,13 +1,13 @@
 black==22.3.0
-django-stubs>=1.9.0,<1.12
-django<7.0
+django-stubs>=5.1,<6
+django<6.0
 factory-boy==3.2.1
 flake8-bugbear==21.9.2
 flake8-django==1.1.1
 flake8-docstrings==1.6.0
 flake8==4.0.1
 isort==5.10.1
-mypy==0.942
+mypy==1.19
 nox==2024.10.09
 PyLTI1p3==2.0.0
 pytest-django==4.11.1

@@ -351,7 +351,7 @@ class LtiContext(models.Model):
     )
     label = models.CharField(_("label"), max_length=255, blank=True)
     title = models.CharField(_("title"), max_length=500, blank=True)
-    members = models.ManyToManyField(
+    members: "models.ManyToManyField[LtiUser, LtiMembership]" = models.ManyToManyField(
         LtiUser,
         related_name="contexts",
         through="LtiMembership",
