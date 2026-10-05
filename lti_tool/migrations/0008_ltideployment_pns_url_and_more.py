@@ -4,7 +4,6 @@ from django.db import migrations, models
 
 
 class Migration(migrations.Migration):
-
     dependencies = [
         ("lti_tool", "0007_lticontext_lti1p1_id_on_platform_and_more"),
     ]

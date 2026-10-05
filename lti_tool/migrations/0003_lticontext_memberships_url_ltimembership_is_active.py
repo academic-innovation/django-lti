@@ -4,20 +4,19 @@ from django.db import migrations, models
 
 
 class Migration(migrations.Migration):
-
     dependencies = [
-        ('lti_tool', '0002_create_lti_domain_models'),
+        ("lti_tool", "0002_create_lti_domain_models"),
     ]
 
     operations = [
         migrations.AddField(
-            model_name='lticontext',
-            name='memberships_url',
+            model_name="lticontext",
+            name="memberships_url",
             field=models.URLField(blank=True),
         ),
         migrations.AddField(
-            model_name='ltimembership',
-            name='is_active',
-            field=models.BooleanField(default=True, verbose_name='is active'),
+            model_name="ltimembership",
+            name="is_active",
+            field=models.BooleanField(default=True, verbose_name="is active"),
         ),
     ]

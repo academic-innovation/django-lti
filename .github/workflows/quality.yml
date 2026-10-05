@@ -17,15 +17,6 @@ jobs:
           python-version: "3.10"
       - run: pip install --user --upgrade nox
       - run: nox -s lint
-  sort:
-    runs-on: ubuntu-latest
-    steps:
-      - uses: actions/checkout@v7.0.1
-      - uses: actions/setup-python@v7.0.0
-        with:
-          python-version: "3.10"
-      - run: pip install --user --upgrade nox
-      - run: nox -s sort
   format:
     runs-on: ubuntu-latest
     steps:

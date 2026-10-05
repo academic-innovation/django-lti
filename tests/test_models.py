@@ -76,7 +76,7 @@ class TestLtiContext:
         ("id", "title", "result"),
         [("ctx-4444", "", "ctx-4444"), ("ctx-4444", "Title", "Title")],
     )
-    def test_str(self, id, title, result):
+    def test_str(self, id, title, result):  # noqa: A002
         context = factories.LtiContextFactory(id_on_platform=id, title=title)
         assert str(context) == result
 
@@ -145,7 +145,7 @@ class TestLtiResourceLink:
         ("id", "title", "result"),
         [("abc123", "Title", "Title"), ("abc123", "", "abc123")],
     )
-    def test_str(self, id, title, result):
+    def test_str(self, id, title, result):  # noqa: A002
         resource_link = factories.LtiResourceLinkFactory(id_on_platform=id, title=title)
         assert str(resource_link) == result
 

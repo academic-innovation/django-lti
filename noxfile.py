@@ -3,23 +3,16 @@ import nox
 
 @nox.session
 def lint(session):
-    """Checks for linting errors with flake8."""
+    """Checks for linting errors with ruff."""
     session.install("-r", "requirements.txt")
-    session.run("flake8")
+    session.run("ruff", "check")
 
 
 @nox.session
-def sort(session):
-    """Checks that imports are correctly sorted using isort."""
+def format(session):  # noqa: A001
+    """Checks that code is correctly formatted using ruff."""
     session.install("-r", "requirements.txt")
-    session.run("isort", ".", "--check")
-
-
-@nox.session
-def format(session):
-    """Checks that code is correctly formatted using black."""
-    session.install("-r", "requirements.txt")
-    session.run("black", ".", "--check")
+    session.run("ruff", "format", "--check")
 
 
 @nox.session

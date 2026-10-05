@@ -1,5 +1,3 @@
-from typing import Optional
-
 from django.http.request import HttpRequest
 
 from pylti1p3.contrib.django.launch_data_storage.cache import DjangoCacheDataStorage
@@ -98,7 +96,7 @@ class DjangoToolConfig(ToolConfAbstract):
 
 
 def get_launch_from_request(
-    request: HttpRequest, launch_id: Optional[str] = None
+    request: HttpRequest, launch_id: str | None = None
 ) -> LtiLaunch:
     """Returns the DjangoMessageLaunch associated with a request.
 
@@ -155,7 +153,7 @@ def sync_deployment_from_launch(lti_launch: LtiLaunch) -> LtiDeployment:
 
 
 def sync_user_from_launch(
-    lti_launch: LtiLaunch, lti1p1_secret: Optional[str] = None
+    lti_launch: LtiLaunch, lti1p1_secret: str | None = None
 ) -> LtiUser:
     sub = lti_launch.get_claim("sub")
     user_claims = {
@@ -194,7 +192,7 @@ def _get_ags_props(lti_launch: LtiLaunch) -> dict:
 
 
 def sync_context_from_launch(
-    lti_launch: LtiLaunch, lti1p1_secret: Optional[str] = None
+    lti_launch: LtiLaunch, lti1p1_secret: str | None = None
 ) -> LtiContext:
     context_claim = {} if lti_launch.context_claim is None else lti_launch.context_claim
     nrps_claim = lti_launch.nrps_claim
@@ -247,7 +245,7 @@ def sync_membership_from_launch(
 
 
 def sync_resource_link_from_launch(
-    lti_launch: LtiLaunch, context: LtiContext, lti1p1_secret: Optional[str] = None
+    lti_launch: LtiLaunch, context: LtiContext, lti1p1_secret: str | None = None
 ) -> LtiResourceLink:
     resource_link_claim = {
         k: v for k, v in lti_launch.resource_link_claim.items() if v is not None
@@ -271,8 +269,8 @@ def sync_resource_link_from_launch(
 
 
 def sync_platform_instance_from_launch(
-    lti_launch: LtiLaunch, lti1p1_secret: Optional[str] = None
-) -> Optional[LtiPlatformInstance]:
+    lti_launch: LtiLaunch, lti1p1_secret: str | None = None
+) -> LtiPlatformInstance | None:
     platform_instance_claim = lti_launch.platform_instance_claim
     if platform_instance_claim is None:
         return None
@@ -302,7 +300,7 @@ def sync_platform_instance_from_launch(
 
 
 def sync_data_from_launch(
-    lti_launch: LtiLaunch, lti1p1_secret: Optional[str] = None
+    lti_launch: LtiLaunch, lti1p1_secret: str | None = None
 ) -> None:
     sync_deployment_from_launch(lti_launch)
     user = sync_user_from_launch(lti_launch, lti1p1_secret)

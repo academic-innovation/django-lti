@@ -1,5 +1,5 @@
 import json
-from typing import List, NamedTuple, Optional
+from typing import NamedTuple
 from urllib import parse
 from uuid import uuid4
 
@@ -383,7 +383,7 @@ class LtiContext(models.Model):
     def __str__(self):
         return self.title if self.title else self.id_on_platform
 
-    def update_memberships(self, member_data: List[dict]):
+    def update_memberships(self, member_data: list[dict]):
         """Updates memberships for this context using NRPS data."""
         registration = self.deployment.registration
         for member in member_data:
@@ -529,8 +529,8 @@ class ViewportDimensions(NamedTuple):
 class LtiLaunch:
     """An LTI launch."""
 
-    _lti1p3_message_launch: Optional[MessageLaunch] = None
-    _lti1p3_launch_id: Optional[str] = None
+    _lti1p3_message_launch: MessageLaunch | None = None
+    _lti1p3_launch_id: str | None = None
 
     def __init__(self, message_launch: MessageLaunch) -> None:
         launch_id = None
@@ -684,7 +684,7 @@ class LtiLaunch:
         return self.get_claim("https://purl.imsglobal.org/spec/lti/claim/tool_platform")
 
     @cached_property
-    def platform_instance(self) -> Optional[LtiPlatformInstance]:
+    def platform_instance(self) -> LtiPlatformInstance | None:
         """The LTI platform instance associated with the launch, if present."""
         if self.platform_instance_claim is None:
             return None
@@ -699,7 +699,7 @@ class LtiLaunch:
         )
 
     @property
-    def document_target(self) -> Optional[str]:
+    def document_target(self) -> str | None:
         """The kind of browser window or frame in which the launch is presented.
 
         See https://www.imsglobal.org/spec/lti/v1p3/#launch-presentation-claim
@@ -709,7 +709,7 @@ class LtiLaunch:
         return self.launch_presentation_claim.get("document_target")
 
     @property
-    def dimensions(self) -> Optional[ViewportDimensions]:
+    def dimensions(self) -> ViewportDimensions | None:
         """Width and height of the window or frame in which the launch is presented.
 
         See https://www.imsglobal.org/spec/lti/v1p3/#launch-presentation-claim
@@ -729,7 +729,7 @@ class LtiLaunch:
         lti_msg: str = "",
         lti_errorlog: str = "",
         lti_log: str = "",
-    ) -> Optional[str]:
+    ) -> str | None:
         """Constructs a return URL, when supported by the launch."""
         if self.launch_presentation_claim is None:
             return None
@@ -773,12 +773,12 @@ class LtiLaunch:
             return False
         return validate_migration_claim(launch_data, lti1p1_secret)
 
-    def deep_link_response(self, resources: List[DeepLinkResource]) -> HttpResponse:
+    def deep_link_response(self, resources: list[DeepLinkResource]) -> HttpResponse:
         """Creates a deep linking response for this launch."""
         html = self.get_message_launch().get_deep_link().output_response_form(resources)
         return HttpResponse(html)
 
-    def get_custom_claim(self, claim: str) -> Optional[str]:
+    def get_custom_claim(self, claim: str) -> str | None:
         """Returns a custom claim value, or None if not present."""
         custom_claims = self.get_claim(
             "https://purl.imsglobal.org/spec/lti/claim/custom"
