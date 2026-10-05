@@ -4,35 +4,38 @@ from django.db import migrations, models
 
 
 class Migration(migrations.Migration):
-
     dependencies = [
-        ('lti_tool', '0003_lticontext_memberships_url_ltimembership_is_active'),
+        ("lti_tool", "0003_lticontext_memberships_url_ltimembership_is_active"),
     ]
 
     operations = [
         migrations.AddField(
-            model_name='lticontext',
-            name='can_access_results',
-            field=models.BooleanField(default=False, verbose_name='can access results'),
+            model_name="lticontext",
+            name="can_access_results",
+            field=models.BooleanField(default=False, verbose_name="can access results"),
         ),
         migrations.AddField(
-            model_name='lticontext',
-            name='can_manage_lineitems',
-            field=models.BooleanField(default=False, verbose_name='can manage lineitems'),
+            model_name="lticontext",
+            name="can_manage_lineitems",
+            field=models.BooleanField(
+                default=False, verbose_name="can manage lineitems"
+            ),
         ),
         migrations.AddField(
-            model_name='lticontext',
-            name='can_publish_scores',
-            field=models.BooleanField(default=False, verbose_name='can publish scores'),
+            model_name="lticontext",
+            name="can_publish_scores",
+            field=models.BooleanField(default=False, verbose_name="can publish scores"),
         ),
         migrations.AddField(
-            model_name='lticontext',
-            name='can_query_lineitems',
-            field=models.BooleanField(default=False, verbose_name='can query lineitems'),
+            model_name="lticontext",
+            name="can_query_lineitems",
+            field=models.BooleanField(
+                default=False, verbose_name="can query lineitems"
+            ),
         ),
         migrations.AddField(
-            model_name='lticontext',
-            name='lineitems_url',
-            field=models.URLField(blank=True, verbose_name='lineitems URL'),
+            model_name="lticontext",
+            name="lineitems_url",
+            field=models.URLField(blank=True, verbose_name="lineitems URL"),
         ),
     ]

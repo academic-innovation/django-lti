@@ -1,4 +1,4 @@
-from typing import List, cast
+from typing import cast
 
 from pylti1p3.names_roles import NamesRolesProvisioningService
 from pylti1p3.service_connector import ServiceConnector
@@ -6,7 +6,7 @@ from pylti1p3.service_connector import ServiceConnector
 from lti_tool.models import LtiContext
 
 
-def fetch_member_data(context: LtiContext) -> List[dict]:
+def fetch_member_data(context: LtiContext) -> list[dict]:
     """Fetches NRPS member data for the given context."""
     if not context.memberships_url:
         return []
@@ -15,7 +15,7 @@ def fetch_member_data(context: LtiContext) -> List[dict]:
         {"context_memberships_url": context.memberships_url},
     )
     # TODO: Revisit type casting after pylti1p3 drops support for Python 2.
-    return cast(List[dict], nrps.get_members())
+    return cast(list[dict], nrps.get_members())
 
 
 def sync_memberships(context: LtiContext):

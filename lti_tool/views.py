@@ -1,5 +1,3 @@
-from typing import Optional
-
 from django.http import (
     HttpRequest,
     HttpResponse,
@@ -94,7 +92,7 @@ class LtiLaunchBaseView(View):
         if request.lti_launch.is_data_privacy_launch:
             return self.handle_data_privacy_launch(request, lti_launch)
 
-    def get_lti1p1_secret(self, oauth_consumer_key: Optional[str]):
+    def get_lti1p1_secret(self, oauth_consumer_key: str | None) -> str | None:
         """Returns the LTI 1.1 secret for the provided consumer key.
 
         Override this method to validate and sync data from the LTI 1.1 migration claim.

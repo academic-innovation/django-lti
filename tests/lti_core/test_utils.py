@@ -17,7 +17,7 @@ from lti_tool.lti_core import utils
         ),
     ],
 )
-def test_normalize_role(input, output):
+def test_normalize_role(input, output):  # noqa: A002
     assert utils.normalize_role(input) == output
 
 
