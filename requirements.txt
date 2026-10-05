@@ -3,7 +3,7 @@ django<6.0
 factory-boy==3.2.1
 mypy==1.19
 nox==2024.10.09
-PyLTI1p3==2.0.0
+pylti1p3next==2.0.2
 pytest-django==4.11.1
 pytest==8.4.2
 ruff==0.16.10
