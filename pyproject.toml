@@ -1,6 +1,59 @@
+[project]
+name = "django-lti"
+version = "0.10.1"
+description = "LTI tool support for Django"
+readme = "README.md"
+requires-python = ">=3.10"
+license = "MIT"
+license-files = ["LICENSE"]
+classifiers = [
+    "Development Status :: 4 - Beta",
+    "Framework :: Django :: 5.2",
+    "Framework :: Django :: 6.0",
+    "Framework :: Django :: 6.1",
+    "Intended Audience :: Developers",
+    "Operating System :: OS Independent",
+    "Programming Language :: Python :: 3 :: Only",
+    "Programming Language :: Python :: 3",
+    "Programming Language :: Python :: 3.10",
+    "Programming Language :: Python :: 3.11",
+    "Programming Language :: Python :: 3.12",
+    "Programming Language :: Python :: 3.13",
+    "Programming Language :: Python :: 3.14",
+]
+dependencies = [
+    "django>=5.2",
+    "pylti1p3>=2.0",
+]
+
+[project.urls]
+Homepage = "https://github.com/academic-innovation/django-lti"
+Documentation = "https://academic-innovation.github.io/django-lti/"
+
+[dependency-groups]
+dev = [
+    "django-stubs>=5.1,<6",
+    "factory-boy==3.2.1",
+    "mypy==1.19",
+    "nox[uv]==2024.10.09",
+    "pytest==8.4.2",
+    "pytest-django==4.11.1",
+    "ruff==0.16.10",
+]
+docs = [
+    "furo==2023.08.19",
+    "Sphinx==7.2.5",
+]
+
 [build-system]
-requires = ["setuptools", "wheel"]
-build-backend = "setuptools.build_meta"
+requires = ["uv_build>=0.11,<0.13"]
+build-backend = "uv_build"
+
+[tool.uv.build-backend]
+module-name = "lti_tool"
+
+[tool.pytest.ini_options]
+DJANGO_SETTINGS_MODULE = "tests.settings"
 
 [tool.ruff]
 target-version = "py310"

@@ -10,3 +10,10 @@ updates:
       day: "tuesday"
     cooldown:
       default-days: 7
+  - package-ecosystem: "uv"
+    directory: "/"
+    schedule:
+      interval: "weekly"
+      day: "tuesday"
+    cooldown:
+      default-days: 7

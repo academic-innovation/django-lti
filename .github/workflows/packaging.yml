@@ -14,11 +14,10 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v7.0.1
-      - uses: actions/setup-python@v7.0.0
+      - uses: astral-sh/setup-uv@v10.2.0
         with:
-          python-version: "3.10"
-      - run: python -m pip install build --user
-      - run: python -m build --sdist --wheel --outdir dist/
+          enable-cache: true
+      - run: uv build --out-dir dist/
       - uses: actions/upload-artifact@v7
         with:
           name: package-build
