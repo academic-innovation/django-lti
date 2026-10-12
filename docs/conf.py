@@ -6,6 +6,7 @@
 import os.path
 import sys
 from functools import cached_property
+from importlib import metadata
 
 import django.conf
 import django.utils.functional
@@ -15,7 +16,7 @@ import django.utils.functional
 # If extensions (or modules to document with autodoc) are in another directory,
 # add these directories to sys.path here. If the directory is relative to the
 # documentation root, use os.path.abspath to make it absolute, like shown here.
-sys.path.insert(0, os.path.abspath(".."))
+sys.path.insert(0, os.path.abspath("../src"))
 
 # -- Django setup ------------------------------------------------------------
 
@@ -36,7 +37,7 @@ django.setup()
 project = "django-lti"
 copyright = "2024, Center for Academic Innovation"  # noqa: A001
 author = "Center for Academic Innovation"
-release = "0.10.1"
+release = metadata.version("django-lti")
 
 # -- General configuration ---------------------------------------------------
 # https://www.sphinx-doc.org/en/master/usage/configuration.html#general-configuration

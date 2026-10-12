@@ -1,24 +1,40 @@
 import nox
 
+nox.options.default_venv_backend = "uv"
+
+
+def install_dev(session):
+    """Installs the project and its dev dependency group from the lockfile."""
+    session.run_install(
+        "uv",
+        "sync",
+        "--locked",
+        "--group",
+        "dev",
+        "--python",
+        session.virtualenv.location,
+        env={"UV_PROJECT_ENVIRONMENT": session.virtualenv.location},
+    )
+
 
 @nox.session
 def lint(session):
     """Checks for linting errors with ruff."""
-    session.install("-r", "requirements.txt")
+    install_dev(session)
     session.run("ruff", "check")
 
 
 @nox.session
 def format(session):  # noqa: A001
     """Checks that code is correctly formatted using ruff."""
-    session.install("-r", "requirements.txt")
+    install_dev(session)
     session.run("ruff", "format", "--check")
 
 
 @nox.session
 def types(session):
     """Check types using mypy."""
-    session.install("-r", "requirements.txt")
+    install_dev(session)
     session.run("mypy", ".")
 
 
@@ -40,6 +56,6 @@ def types(session):
 )
 def test(session, django):
     """Runs tests with pytest."""
+    install_dev(session)
     session.install(f"django~={django}")
-    session.install("-r", "requirements.txt")
     session.run("pytest")

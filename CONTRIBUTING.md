@@ -15,8 +15,8 @@ git clone git@github.com:academic-innovation/django-lti.git
 
 ## Step 2: Install development dependencies
 
-Make sure you're working in a virtual env and install
-development dependencies with `pip install -r requirements.txt`.
+Install [uv][3], then create a virtual env with the package and
+its development dependencies by running `uv sync`.
 
 ## Step 3: Checkout a new branch
 
@@ -29,7 +29,9 @@ git checkout -b my-awsome-feature main
 ## Step 4: Run quality checks
 
 Before submitting a pull request, run quality checks locally
-with `nox`.
+with `uv run nox`. For quicker feedback while working, you can
+run individual tools directly, e.g. `uv run pytest` or
+`uv run ruff check`.
 
 ## Step 5: Push your branch and create a pull request
 
@@ -39,3 +41,4 @@ git push origin my-awesome-feature
 
 [1]: https://github.com/academic-innovation/django-lti/issues?q=is%3Aopen+is%3Aissue+label%3A%22help+wanted%22
 [2]: https://github.com/settings/keys
+[3]: https://docs.astral.sh/uv/getting-started/installation/
