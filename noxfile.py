@@ -43,13 +43,11 @@ def types(session):
     "python,django",
     [
         (python, django)
-        for python in ("3.10", "3.11", "3.12", "3.13", "3.14")
+        for python in ("3.11", "3.12", "3.13", "3.14")
         for django in ("5.2.0", "6.0.0", "6.1.0")
         if (python, django)
         not in [
-            ("3.10", "6.0.0"),
             ("3.11", "6.0.0"),
-            ("3.10", "6.1.0"),
             ("3.11", "6.1.0"),
         ]
     ],
