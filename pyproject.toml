@@ -33,7 +33,7 @@ Documentation = "https://academic-innovation.github.io/django-lti/"
 dev = [
     "django-stubs>=5.1,<7",
     "factory-boy==3.3.3",
-    "mypy==2.4.0",
+    "mypy==2.4.1",
     "nox[uv]==2026.10.20",
     "pytest==9.2.0",
     "pytest-asyncio>=1.4.0",
