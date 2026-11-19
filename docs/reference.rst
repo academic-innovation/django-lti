@@ -17,6 +17,13 @@ LTI Views
    :exclude-members: post, dispatch
    :member-order: bysource
 
+LTI Middleware
+--------------
+
+.. autoclass:: lti_tool.middleware.LtiLaunchMiddleware
+
+.. autoclass:: lti_tool.middleware.LtiEmbedMiddleware
+
 LTI launch data
 ---------------
 
@@ -51,5 +58,9 @@ Django database models are provided by ``django-lti`` to represent the configura
 and components of an LTI launch.
 
 .. autoclass:: lti_tool.models.LtiRegistration
+   :members:
+   :exclude-members: DoesNotExist, MultipleObjectsReturned
+
+.. autoclass:: lti_tool.models.EmbedDomain
    :members:
    :exclude-members: DoesNotExist, MultipleObjectsReturned

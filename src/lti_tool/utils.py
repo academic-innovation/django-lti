@@ -1,3 +1,5 @@
+from django.conf import settings
+from django.core.cache import BaseCache, caches
 from django.http.request import HttpRequest
 
 from pylti1p3.contrib.django.launch_data_storage.cache import DjangoCacheDataStorage
@@ -5,6 +7,7 @@ from pylti1p3.contrib.django.message_launch import DjangoMessageLaunch
 from pylti1p3.deployment import Deployment
 from pylti1p3.tool_config.abstract import ToolConfAbstract
 
+from .constants import DEFAULT_EMBED_CACHE_NAME, DEFAULT_EMBED_CACHE_TIMEOUT
 from .lti_core.constants import AgsScope, ContextRole, ContextType
 from .lti_core.utils import normalize_role
 from .models import (
@@ -114,6 +117,31 @@ def get_launch_from_request(
         )
         message_launch.validate()
     return LtiLaunch(message_launch)
+
+
+def get_embed_cache() -> BaseCache:
+    """Returns the cache used to store embed domains.
+
+    Set ``LTI_TOOL_EMBED_CACHE`` to the name of an entry in ``CACHES``.
+    """
+    name = getattr(settings, "LTI_TOOL_EMBED_CACHE", DEFAULT_EMBED_CACHE_NAME)
+    return caches[name]
+
+
+def get_embed_cache_timeout() -> int | None:
+    """Returns how long (in seconds) embed domains are cached.
+
+    Set ``LTI_TOOL_EMBED_CACHE_TIMEOUT`` to change this. ``0`` disables caching
+    and ``None`` caches indefinitely.
+    """
+    return getattr(
+        settings, "LTI_TOOL_EMBED_CACHE_TIMEOUT", DEFAULT_EMBED_CACHE_TIMEOUT
+    )
+
+
+def get_embed_cache_key(registration_id) -> str:
+    """Returns the key used to retrieve a registration's domains from the cache."""
+    return f"lti_tool:embed_domains:{registration_id}"
 
 
 def sync_deployment_from_launch(lti_launch: LtiLaunch) -> LtiDeployment:

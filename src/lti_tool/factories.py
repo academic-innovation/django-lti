@@ -17,6 +17,16 @@ class LtiRegistrationFactory(factory.django.DjangoModelFactory):
         model = models.LtiRegistration
 
 
+class EmbedDomainFactory(factory.django.DjangoModelFactory):
+    """Factory for EmbedDomain objects."""
+
+    registration = factory.SubFactory(LtiRegistrationFactory)
+    domain = factory.Faker("domain_name")
+
+    class Meta:
+        model = models.EmbedDomain
+
+
 class LtiPlatformInstanceFactory(factory.django.DjangoModelFactory):
     """Factory for LtiPlatformInstance objects."""
 

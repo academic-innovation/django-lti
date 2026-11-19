@@ -8,3 +8,6 @@ class LtiToolAppConfig(AppConfig):
     name = "lti_tool"
     verbose_name = _("LTI tool")
     default_auto_field = "django.db.models.AutoField"
+
+    def ready(self):
+        from . import signals  # noqa: PLC0415,F401

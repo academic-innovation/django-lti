@@ -1,3 +1,5 @@
+from django.core.exceptions import ValidationError
+
 import pytest
 
 from lti_tool import factories, models
@@ -22,6 +24,48 @@ class TestLtiRegistration:
     def test_str(self):
         registration = factories.LtiRegistrationFactory(name="LTI Registration")
         assert str(registration) == "LTI Registration"
+
+
+@pytest.mark.django_db
+class TestEmbedDomain:
+    """Tests for the EmbedDomain model."""
+
+    def test_str(self):
+        embed_domain = factories.EmbedDomainFactory(domain="www.example.com")
+        assert str(embed_domain) == "www.example.com"
+
+    @pytest.mark.parametrize(
+        "domain",
+        [
+            "bad domain",
+            "example.com; script-src *",
+            "example.com, evil.com",
+            "*.example.com",
+            "https://example.com",
+            "example.com:8443",
+            "",
+        ],
+    )
+    def test_rejects_invalid_domain(self, domain):
+        embed_domain = factories.EmbedDomainFactory.build(domain=domain)
+        with pytest.raises(ValidationError) as exc_info:
+            embed_domain.full_clean(exclude=["registration"])
+        assert "domain" in exc_info.value.error_dict
+
+    def test_rejects_duplicate_domain_for_registration(self):
+        existing = factories.EmbedDomainFactory(domain="example.com")
+        duplicate = models.EmbedDomain(
+            registration=existing.registration, domain="example.com"
+        )
+        with pytest.raises(ValidationError, match="only once"):
+            duplicate.full_clean()
+
+    def test_allows_same_domain_on_different_registrations(self):
+        factories.EmbedDomainFactory(domain="example.com")
+        other = factories.EmbedDomainFactory.build(
+            domain="example.com", registration=factories.LtiRegistrationFactory()
+        )
+        other.full_clean()
 
 
 @pytest.mark.django_db

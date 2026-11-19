@@ -1,1 +1,4 @@
 SESSION_KEY = "_lti_tool_launch_id"
+
+DEFAULT_EMBED_CACHE_NAME = "default"
+DEFAULT_EMBED_CACHE_TIMEOUT = 300

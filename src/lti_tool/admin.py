@@ -8,6 +8,10 @@ class LtiDeploymentInline(admin.TabularInline):
     model = models.LtiDeployment
 
 
+class EmbedDomainInline(admin.TabularInline):
+    model = models.EmbedDomain
+
+
 @admin.register(models.LtiRegistration)
 class LtiRegistrationAdmin(admin.ModelAdmin):
     list_display = ["name", "issuer", "client_id", "datetime_created", "is_active"]
@@ -37,4 +41,4 @@ class LtiRegistrationAdmin(admin.ModelAdmin):
             },
         ),
     ]
-    inlines = [LtiDeploymentInline]
+    inlines = [LtiDeploymentInline, EmbedDomainInline]

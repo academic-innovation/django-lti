@@ -1,12 +1,15 @@
 from unittest import mock
 
+import django
+from django.core.exceptions import ImproperlyConfigured
+from django.http import HttpResponse
 from django.test import RequestFactory
 
 import pytest
 from pylti1p3.exception import LtiException
 
 from lti_tool.constants import SESSION_KEY
-from lti_tool.middleware import LtiLaunchMiddleware
+from lti_tool.middleware import LtiEmbedMiddleware, LtiLaunchMiddleware
 from lti_tool.models import AbsentLtiLaunch
 
 PATCH_TARGET = "lti_tool.middleware.get_launch_from_request"
@@ -104,3 +107,18 @@ class TestLtiLaunchMiddleware:
         assert response == "response"
         assert isinstance(request.lti_launch, AbsentLtiLaunch)
         get_response.assert_awaited_once_with(request)
+
+
+class TestLtiEmbedMiddlewareSetup:
+    """Tests for LtiEmbedMiddleware configuration checks."""
+
+    def test_requires_supported_django_version(self, monkeypatch):
+        monkeypatch.setattr(django, "VERSION", (5, 2, 0, "final", 0))
+        with pytest.raises(ImproperlyConfigured, match="Django 6.0"):
+            LtiEmbedMiddleware(lambda request: HttpResponse())
+
+    def test_requires_launch_middleware(self, monkeypatch):
+        monkeypatch.setattr(django, "VERSION", (6, 0, 0, "final", 0))
+        middleware = LtiEmbedMiddleware(lambda request: HttpResponse())
+        with pytest.raises(ImproperlyConfigured, match="LtiLaunchMiddleware"):
+            middleware(RequestFactory().get("/"))
