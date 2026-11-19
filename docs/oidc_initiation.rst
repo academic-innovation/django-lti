@@ -28,6 +28,9 @@ The ``registration_uuid`` parameter is a reference to the
 :attr:`LtiRegistration.uuid <lti_tool.models.LtiRegistration.uuid>` property, and is
 used to identify the platform registration associated with the initiation request.
 
+Platforms often load this view in a frame, though some open launches in a new window
+or tab instead. To allow a platform's domains to frame it, see :doc:`embedding`.
+
 
 Customizing language for blocked cookies
 ----------------------------------------

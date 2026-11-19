@@ -39,6 +39,8 @@ It's important to list the ``LtiLaunchMiddleware`` *after* ``SessionMiddleware``
         'lti_tool.middleware.LtiLaunchMiddleware',
     ]
 
+To allow a platform to embed your tool, also see :doc:`embedding`.
+
 Finally, run migrations to initialize the needed database tables.
 
 .. code-block:: console
