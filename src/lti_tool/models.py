@@ -4,6 +4,7 @@ from urllib import parse
 from uuid import uuid4
 
 from django.conf import settings
+from django.core.validators import validate_domain_name
 from django.db import models
 from django.http import HttpResponse
 from django.utils.functional import cached_property
@@ -178,6 +179,27 @@ class LtiRegistration(models.Model):
             reg.set_tool_private_key(key.private_key)
             reg.set_tool_public_key(key.public_key)
         return reg
+
+
+class EmbedDomain(models.Model):
+    """A domain allowed to embed the tool via CSP frame-ancestors."""
+
+    registration = models.ForeignKey(
+        LtiRegistration, related_name="embed_domains", on_delete=models.CASCADE
+    )
+    domain = models.CharField(max_length=253, validators=[validate_domain_name])
+
+    class Meta:
+        constraints = [
+            models.UniqueConstraint(
+                fields=["registration", "domain"],
+                name="unique_domain_per_registration",
+                violation_error_message=_("Please list each domain only once."),
+            )
+        ]
+
+    def __str__(self):
+        return self.domain
 
 
 class LtiPlatformInstance(models.Model):
