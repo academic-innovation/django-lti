@@ -1,3 +1,5 @@
+from contextlib import suppress
+
 from django.http import (
     HttpRequest,
     HttpResponse,
@@ -13,6 +15,7 @@ from django.views.decorators.clickjacking import xframe_options_exempt
 from django.views.decorators.csrf import csrf_exempt
 
 from pylti1p3.contrib.django import DjangoCacheDataStorage, DjangoOIDCLogin
+from pylti1p3.exception import OIDCException
 
 from lti_tool.utils import DjangoToolConfig, get_launch_from_request
 
@@ -60,6 +63,12 @@ class OIDCLoginInitView(View):
         if target_link_uri is None:
             return HttpResponseBadRequest("Missing target_link_uri parameter.")
         redirect_url = self.get_redirect_url(target_link_uri)
+        # Resolve the registration up front: the cookie check page is returned
+        # before pylti1p3 validates anything. Invalid requests are reported by
+        # `redirect` as usual.
+        with suppress(OIDCException):
+            oidc_login.validate_oidc_login()
+        request.lti_registration = tool_conf.registration
         return oidc_login.enable_check_cookies(
             self.main_msg, self.click_msg, self.loading_msg
         ).redirect(redirect_url)
